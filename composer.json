@@ -1,0 +1,23 @@
+{
+    "name": "biiiiiigmonster/aop",
+    "description": "PHP8 Attribute Component",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "YunFeng Lu",
+            "email": "603707288@qq.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "BiiiiiigMonster\\Aop\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.0",
+        "laravel/framework": "^8.0",
+        "symfony/finder": "^5.0",
+        "nikic/php-parser": "^4.10"
+    }
+}

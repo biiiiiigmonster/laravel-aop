@@ -1,0 +1,103 @@
+<?php
+
+namespace BiiiiiigMonster\Aop;
+
+use BiiiiiigMonster\Aop\Visitor\ClassVisitor;
+use BiiiiiigMonster\Aop\Visitor\MethodVisitor;
+use Composer\Autoload\ClassLoader as ComposerClassLoader;
+use Symfony\Component\Finder\Finder;
+
+class AopClassLoader
+{
+    private array $classMap = [];
+
+    /**
+     * AopClassLoader constructor.
+     * @param ComposerClassLoader $composerLoader
+     * @param array $config
+     */
+    public function __construct(
+        private ComposerClassLoader $composerLoader,
+        private array $config
+    )
+    {
+        $this->proxyFile();
+    }
+
+    /**
+     * @param array $config
+     */
+    public static function init(array $config = []): void
+    {
+        $loaders = spl_autoload_functions();
+
+        foreach ($loaders as &$loader) {
+            $unregisterLoader = $loader;
+            if (is_array($loader) && $loader[0] instanceof ComposerClassLoader) {
+                $loader[0] = new static($loader[0], $config);
+            }
+            spl_autoload_unregister($unregisterLoader);
+        }
+        unset($loader);
+
+        foreach ($loaders as $reLoader) {
+            spl_autoload_register($reLoader);
+        }
+    }
+
+    /**
+     * Create Proxy File.
+     */
+    public function proxyFile(): void
+    {
+        $proxyDir = $this->config['proxy'] ?? app_path();
+        $storagePath = $this->config['storage'] ?? sys_get_temp_dir();
+        !is_dir($storagePath) && mkdir($storagePath);
+
+        // 这里也要处理下
+        $files = Finder::create()->in($proxyDir)->exclude('Aop')->files()->name('*.php');
+        foreach ($files as $file) {
+            // 实例化代理
+            $proxy = new Proxy([$classVisitor = new ClassVisitor(), new MethodVisitor()]);
+            // 代理类将源代码生成代理后代码(在生成代理代码的过程中，源文件相关信息会被存储在访客节点类中)
+            $proxyCode = $proxy->generateProxyCode($file->getContents());
+            // 判断当前扫描结果，如果是Aspect注解，那就进行注册
+            if ($classVisitor->isAspect()) {
+                Aop::register($classVisitor->getOriginalClassName());
+            }
+            // 将代理后代码写入代理类中
+            $proxyFile = sprintf(
+                '%s' . DIRECTORY_SEPARATOR . '%s',
+                $storagePath,
+                $file->getFilename()
+            );
+            $result = file_put_contents($proxyFile, $proxyCode);
+            if ($result) {
+                // 保存源类名与代理文件的映射关系
+                $this->classMap[$classVisitor->getOriginalClassName()] = $proxyFile;
+            }
+        }
+    }
+
+    /**
+     * @param string $class
+     */
+    public function loadClass(string $class): void
+    {
+        if ($file = $this->findFile($class)) {
+
+            include $file;
+        }
+    }
+
+    /**
+     * @param string $class
+     * @return string|null
+     */
+    public function findFile(string $class): ?string
+    {
+        $file = $this->classMap[$class] ?? $this->composerLoader->findFile($class);
+
+        return is_string($file) ? $file : null;
+    }
+}
