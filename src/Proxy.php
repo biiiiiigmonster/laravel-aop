@@ -52,4 +52,19 @@ class Proxy
         // 将遍历器处理后的AST最终输出成代理后代码
         return $this->printer->prettyPrintFile($nodes);
     }
+
+    /**
+     * @param string $originalCode
+     * @param string $proxyFile
+     * @return string
+     */
+    public function generateProxyFile(string $originalCode, string $proxyFile): string
+    {
+        // 代理类将源代码生成代理后代码(在生成代理代码的过程中，源文件相关信息会被存储在访客节点类中)
+        $proxyCode = $this->generateProxyCode($originalCode);
+        // 将代理后代码写入代理类中
+        $result = file_put_contents($proxyFile, $proxyCode);
+
+        return $result ? $proxyFile : '';
+    }
 }
