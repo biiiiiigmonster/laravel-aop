@@ -15,8 +15,8 @@ trait AopTrait
     {
         $kernel = static fn(Pointer $pointer) => $pointer->kernel();
 
-        $growing = fn(Closure $stack, array $skin) => fn(Pointer $pointer) => (new AspectHandler())($pointer->into($skin), $stack);
+        $through = fn(Closure $stack, array $skin) => fn(Pointer $pointer) => (new AspectHandler())($pointer->into($skin), $stack);
 
-        return array_reduce(array_reverse($skins), $growing, $kernel);
+        return array_reduce(array_reverse($skins), $through, $kernel);
     }
 }
