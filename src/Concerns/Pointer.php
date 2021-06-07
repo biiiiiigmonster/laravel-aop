@@ -46,7 +46,7 @@ abstract class Pointer
      * @param array $skin
      * @return Pointer
      */
-    public function setSkin(array $skin): self
+    public function into(array $skin): static
     {
         $this->curAspectInstance = $skin[0] ?? null;
         $this->curAttributeInstance = $skin[1] ?? null;

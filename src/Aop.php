@@ -9,9 +9,9 @@ use SplPriorityQueue;
 
 class Aop
 {
-    private static array $mapping = [];
-
     private static array $aspects = [];
+
+    private static array $mapping = [];
 
     /**
      * @param string $aspectClass

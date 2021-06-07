@@ -75,13 +75,14 @@ class FunctionPointer extends Pointer
     public function kernel()
     {
         $closure = $this->original;
+        // original parameter contains func_get_args() & variadic arguments
         $args = $this->getArguments();
         foreach ($this->getVariadicArguments() as $named => $argument) {
             if (is_string($named)) {
                 $args[$named] = $argument;
             }
         }
-
+        // original parameter
         return $closure(...$args);
     }
 }

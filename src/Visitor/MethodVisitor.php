@@ -22,6 +22,10 @@ use PhpParser\NodeVisitorAbstract;
 
 class MethodVisitor extends NodeVisitorAbstract
 {
+    /**
+     * Ignore methods
+     */
+    public const IGNORE_METHODS = ['init'];
     private ?Variable $magicConstFunction = null;
     private ?Variable $magicConstMethod = null;
 
@@ -32,7 +36,12 @@ class MethodVisitor extends NodeVisitorAbstract
     public function leaveNode(Node $node): Node
     {
         if ($node instanceof ClassMethod) {
-            if ($node->isPrivate() || $node->isStatic() || $node->isMagic()) {
+            if (
+                $node->isStatic()
+                || $node->isMagic()
+                || $node->isPrivate()
+                || in_array($node->name->toString(), self::IGNORE_METHODS)
+            ) {
                 return $node;
             }
             // Rewrite the method to proxy call method.
@@ -96,6 +105,7 @@ class MethodVisitor extends NodeVisitorAbstract
      */
     private function methodAssign(ClassMethod $node, ?Variable $variadicArgs = null): array
     {
+        /** @var ?array $closureUses */
         $closureUses = null;
         if ($this->magicConstFunction) {
             $magicConstFunction = new Expression(new Assign(new Variable('__function__'), new MagicConstFunction()));

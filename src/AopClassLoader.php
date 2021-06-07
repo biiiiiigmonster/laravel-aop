@@ -61,13 +61,13 @@ class AopClassLoader
             $proxy = new Proxy([$classVisitor = new ClassVisitor(), new MethodVisitor()]);
             $proxyFile = sprintf('%s' . DIRECTORY_SEPARATOR . '%s', $storagePath, $file->getFilename());
             // 代理类将源代码生成代理后代码(在生成代理代码的过程中，源文件相关信息会被存储在访客节点类中)
-            $this->classMap[$classVisitor->getOriginalClassName()] = $proxy->generateProxyFile(
+            $this->classMap[$classVisitor->getClass()] = $proxy->generateProxyFile(
                 $file->getContents(),
                 $proxyFile
             );
             // 判断当前扫描结果，如果是Aspect注解，那就进行注册
             if ($classVisitor->isAspect()) {
-                Aop::register($classVisitor->getOriginalClassName());
+                Aop::register($classVisitor->getClass());
             }
         }
     }

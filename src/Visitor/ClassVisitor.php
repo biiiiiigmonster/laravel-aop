@@ -11,18 +11,41 @@ use PhpParser\NodeVisitorAbstract;
 
 class ClassVisitor extends NodeVisitorAbstract
 {
-    const ASPECT = Aspect::class;
+    /**
+     * Aspect classname
+     */
+    public const ASPECT = Aspect::class;
+
+    /**
+     * Class namespace
+     * @var string
+     */
     private string $namespace = '';
-    private string $originalName = '';
+
+    /**
+     * Class name
+     * @var string
+     */
+    private string $className = '';
+
+    /**
+     * Class uses array
+     * @var array
+     */
     private array $uses = [];
+
+    /**
+     * Class attributes array
+     * @var array
+     */
     private array $attributes = [];
 
     /**
      * @return string
      */
-    public function getOriginalClassName(): string
+    public function getClass(): string
     {
-        return sprintf('%s\\%s', $this->namespace, $this->originalName);
+        return sprintf('%s\\%s', $this->namespace, $this->className);
     }
 
     /**
@@ -61,7 +84,7 @@ class ClassVisitor extends NodeVisitorAbstract
         } elseif ($node instanceof Node\Stmt\Namespace_) {
             $this->namespace = $node->name->toString();
         } elseif ($node instanceof Node\Stmt\Class_) {
-            $this->originalName = $node->name->toString();
+            $this->className = $node->name->toString();
         }
         return $node;
     }

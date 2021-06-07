@@ -14,6 +14,10 @@ use ReflectionMethod;
 
 class AspectHandler
 {
+    /**
+     * Aspect handler advices cache
+     * @var array
+     */
     private static array $advices = [];
 
     /**
