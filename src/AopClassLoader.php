@@ -54,8 +54,7 @@ class AopClassLoader
         $storagePath = $this->config['storage'] ?? sys_get_temp_dir();
         !is_dir($storagePath) && mkdir($storagePath);
 
-        // 这里也要处理下
-        $files = Finder::create()->in($proxyDir)->exclude('Aop')->files()->name('*.php');
+        $files = Finder::create()->in($proxyDir)->exclude(dirname(__DIR__))->files()->name('*.php');
         foreach ($files as $file) {
             // 实例化代理
             $proxy = new Proxy([$classVisitor = new ClassVisitor(), new MethodVisitor()]);
