@@ -89,10 +89,27 @@ class Aop
             return false;
         }
 
-        if (!isset($pointcutArr[1])) {
-            return true;
+        /**
+         * match eg.
+         * $method = insertLog
+         * $ruleMethod = insertLog | insert* | *Log
+         */
+        if (isset($pointcutArr[1])) {
+            $ruleMethod = $pointcutArr[1];
+            if(str_starts_with($ruleMethod, '*')){
+                $ruleMethod = strrev($ruleMethod);
+                $method = strrev($method);
+            }
+            for($i=0;$i<strlen($ruleMethod);$i++){
+                if($ruleMethod[$i]==='*'){
+                    break;
+                }
+                if($ruleMethod[$i]!==$method[$i]){
+                    return false;
+                }
+            }
         }
 
-        return $method === $pointcutArr[1];// 这里先做个全等匹配，后期改成正则实现
+        return true;
     }
 }
