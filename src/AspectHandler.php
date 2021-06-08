@@ -4,6 +4,7 @@ namespace BiiiiiigMonster\Aop;
 
 use BiiiiiigMonster\Aop\Attributes\After;
 use BiiiiiigMonster\Aop\Attributes\AfterReturning;
+use BiiiiiigMonster\Aop\Attributes\AfterThrowing;
 use BiiiiiigMonster\Aop\Attributes\Around;
 use BiiiiiigMonster\Aop\Attributes\Before;
 use BiiiiiigMonster\Aop\Concerns\Pointer;
@@ -11,6 +12,7 @@ use Closure;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
+use Throwable;
 
 class AspectHandler
 {
@@ -25,22 +27,39 @@ class AspectHandler
      * @param Closure $stack
      * @return mixed
      * @throws ReflectionException
+     * @throws Throwable
      */
     public function __invoke(Pointer $pointer, Closure $stack): mixed
     {
         $aspectInstance = $pointer->getCurAspectInstance();
-        [$before, $around, $after, $afterReturning] = self::getAspectAdvices($aspectInstance::class);
+        [$before, $around, $after, $afterThrowing, $afterReturning] = self::getAspectAdvices($aspectInstance::class);
 
-        // Execute Before
-        if ($before) $before->invoke($aspectInstance, $pointer);
-        // Execute Around
-        $pointer->setReturn(
-            $around ? $around->invoke($aspectInstance, $pointer, $stack) : $stack($pointer)
-        );
-        // Execute After
-        if ($after) $after->invoke($aspectInstance, $pointer);
-        // Execute AfterReturning
-        if ($afterReturning) $pointer->setReturn($afterReturning->invoke($aspectInstance, $pointer));
+        try {
+            // Execute Before
+            if ($before) $before->invoke($aspectInstance);
+            // Execute Around
+            $pointer->setReturn(
+                $around ? $around->invoke($aspectInstance, $pointer, $stack) : $stack($pointer)
+            );
+            // Execute After
+            if ($after) $after->invoke($aspectInstance);
+        } catch (Throwable $e) {
+            // Set Throwable
+            $pointer->setThrowable($e);
+        }
+
+        //  Execute AfterThrowing If kernel has throwable
+        if ($pointer->getThrowable()) {
+            // Execute AfterThrowing
+            if ($afterThrowing) {
+                $pointer->setReturn($afterThrowing->invoke($aspectInstance, $pointer->getThrowable()));
+            } else {
+                throw $pointer->getThrowable();
+            }
+        } else {
+            // Execute AfterReturning
+            if ($afterReturning) $pointer->setReturn($afterReturning->invoke($aspectInstance, $pointer));
+        }
 
         return $pointer->getReturn();
     }
@@ -62,6 +81,8 @@ class AspectHandler
                     $around = $method;
                 } else if (!empty($method->getAttributes(After::class))) {
                     $after = $method;
+                } else if (!empty($method->getAttributes(AfterThrowing::class))) {
+                    $afterThrowing = $method;
                 } else if (!empty($method->getAttributes(AfterReturning::class))) {
                     $afterReturning = $method;
                 }
@@ -70,7 +91,8 @@ class AspectHandler
                 'before' => $before ?? null,
                 'around' => $around ?? null,
                 'after' => $after ?? null,
-                'afterReturning' => $afterReturning ?? null
+                'afterThrowing' => $afterThrowing ?? null,
+                'afterReturning' => $afterReturning ?? null,
             ];
         }
         $advices = self::$advices[$aspectClassName];

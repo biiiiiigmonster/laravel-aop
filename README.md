@@ -31,11 +31,11 @@ composer require biiiiiigmonster/php8-aop
 feature
 1.支持切入点切入和注解切入；
 2.切面支持仅限于class中非静态public&protected方法；
-3.执行顺序(管道模型):
+3.执行顺序(洋葱模型):
 2.1 前置类方法priority越大越先执行，后置类方法priority越大越后执行；
 2.2 priority相同时注解切面要外层与切入点切面；
-hotfix
-1.扫描目录处理
-2.pointcut method正则匹配实现
+2.3 切面内方法执行顺序为：Before > Around(kernel) > After > AfterReturning；
+dev
+AfterThrowing handle
 # License
 [MIT](./LICENSE)
