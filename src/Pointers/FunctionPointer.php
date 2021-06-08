@@ -11,6 +11,8 @@ use ReflectionUnionType;
 
 class FunctionPointer extends Pointer
 {
+    private array $argsMap;
+
     /**
      * Pointer constructor.
      *
@@ -18,7 +20,6 @@ class FunctionPointer extends Pointer
      * @param string $method
      * @param array $arguments
      * @param array $variadicArguments
-     * @param array $argsMap
      * @param Closure $original
      * @throws ReflectionException
      */
@@ -27,29 +28,14 @@ class FunctionPointer extends Pointer
         private string $method,
         private array $arguments,// func_get_args() can't get named arguments in variadic parameter.
         private array $variadicArguments,// maybe contain named arguments, if give.
-        private array $argsMap,
         Closure $original,
     )
     {
         $this->original = $original;
-        // Set method return types.
+        // Parse ReflectionMethod Data.
         $methodRfc = new ReflectionMethod($className, $method);
-        $types = [];
-        $returnType = $methodRfc->getReturnType();
-        if ($returnType instanceof ReflectionUnionType) {
-            foreach ($returnType->getTypes() as $returnNamedType) {
-                $types[] = $returnNamedType->getName();
-            }
-        } elseif ($returnType instanceof ReflectionNamedType) {
-            if ($returnType->allowsNull()) {
-                $types[] = 'null';
-            }
-            $types[] = $returnType->getName();
-        } else {
-            $types[] = 'void';
-        }
-
-        $this->setTypes($types);
+        $this->argsMap = $this->parseArgsMap($methodRfc);
+        $this->types = $this->parseReturnType($methodRfc);
     }
 
     /**
@@ -74,6 +60,57 @@ class FunctionPointer extends Pointer
     public function getArguments(): array
     {
         return $this->arguments;
+    }
+
+    /**
+     * @param ReflectionMethod $reflectionMethod
+     * @return array
+     */
+    protected function parseReturnType(ReflectionMethod $reflectionMethod): array
+    {
+        $types = [];
+        $returnType = $reflectionMethod->getReturnType();
+        if ($returnType instanceof ReflectionUnionType) {
+            foreach ($returnType->getTypes() as $returnNamedType) {
+                $types[] = $returnNamedType->getName();
+            }
+        } elseif ($returnType instanceof ReflectionNamedType) {
+            if ($returnType->allowsNull()) {
+                $types[] = 'null';
+            }
+            $types[] = $returnType->getName();
+        } else {
+            $types[] = 'void';
+        }
+
+        return $types;
+    }
+
+    /**
+     * @param ReflectionMethod $reflectionMethod
+     * @return array
+     * @throws ReflectionException
+     */
+    protected function parseArgsMap(ReflectionMethod $reflectionMethod): array
+    {
+        $func_get_args = $this->getArguments();
+        $variadic_args = $this->getVariadicArguments();
+        $argsMap = [];
+        foreach ($reflectionMethod->getParameters() as $parameter) {
+            if (!$parameter->isVariadic()) {
+                $argsMap[$parameter->getName()] = array_shift($func_get_args) ?? $parameter->getDefaultValue();
+            } else {
+                $remainder = $func_get_args;
+                foreach ($variadic_args as $named => $value) {
+                    if (is_string($named)) {
+                        $remainder[$named] = $value;
+                    }
+                }
+                $argsMap[$parameter->getName()] = $remainder;
+            }
+        }
+
+        return $argsMap;
     }
 
     /**

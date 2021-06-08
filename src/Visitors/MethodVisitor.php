@@ -83,8 +83,6 @@ class MethodVisitor extends NodeVisitorAbstract
             new Arg(new FuncCall(new Name('func_get_args'))),
             // variadic args
             new Arg($variadicArgs ?? new Array_([], ['kind' => Array_::KIND_SHORT])),
-            // argsMap()
-            new Arg(new Variable('__argsMap__')),
             // A closure that wrapped original method code.
             new Arg(new Variable('__closure__')),
         ]);
@@ -117,26 +115,18 @@ class MethodVisitor extends NodeVisitorAbstract
             $closureUses[] = new Variable('__method__');
             $this->magicConstMethod = null;
         }
-        $argsMap = new Expression(new Assign(new Variable('__argsMap__'), new StaticCall(new Name('self'), '__proxyArgsMap', [
-            // __CLASS__
-            new Arg(new MagicConstClass()),
-            // __FUNCTION__
-            new Arg(new MagicConstFunction()),
-            // func_get_args()
-            new Arg(new FuncCall(new Name('func_get_args'))),
-            // variadic args
-            new Arg($variadicArgs ?? new Array_([], ['kind' => Array_::KIND_SHORT])),
-        ])));
-        // 这里还有问题，  对于可变参数的时候
+        // Create Original Closure
         $closure = new Expression(new Assign(new Variable('__closure__'), new Closure([
             'params' => $node->getParams(),
             'uses' => $closureUses,
             'stmts' => $node->stmts,
             'returnType' => $node->getReturnType()
         ])));
-        $return = [$argsMap, $closure];
+
+        $return = [$closure];
         if (isset($magicConstMethod)) array_unshift($return, $magicConstMethod);
         if (isset($magicConstFunction)) array_unshift($return, $magicConstFunction);
+
         return $return;
     }
 }
