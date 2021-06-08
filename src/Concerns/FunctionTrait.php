@@ -3,7 +3,7 @@
 namespace BiiiiiigMonster\Aop\Concerns;
 
 use BiiiiiigMonster\Aop\Aop;
-use BiiiiiigMonster\Aop\Pointer\FunctionPointer;
+use BiiiiiigMonster\Aop\Pointers\FunctionPointer;
 use Closure;
 use ReflectionException;
 use ReflectionMethod;

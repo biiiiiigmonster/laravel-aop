@@ -2,8 +2,8 @@
 
 namespace BiiiiiigMonster\Aop;
 
-use BiiiiiigMonster\Aop\Visitor\ClassVisitor;
-use BiiiiiigMonster\Aop\Visitor\MethodVisitor;
+use BiiiiiigMonster\Aop\Visitors\ClassVisitor;
+use BiiiiiigMonster\Aop\Visitors\MethodVisitor;
 use Composer\Autoload\ClassLoader as ComposerClassLoader;
 use Symfony\Component\Finder\Finder;
 

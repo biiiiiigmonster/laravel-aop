@@ -1,6 +1,6 @@
 <?php
 
-namespace BiiiiiigMonster\Aop\Visitor;
+namespace BiiiiiigMonster\Aop\Visitors;
 
 use BiiiiiigMonster\Aop\Attributes\Aspect;
 use BiiiiiigMonster\Aop\Concerns\FunctionTrait;

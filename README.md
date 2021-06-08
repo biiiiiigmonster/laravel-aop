@@ -2,7 +2,7 @@ English | [中文](./README-CN.md)
 
 <div align="center">
 
-# LARAVEL ELOQUENT TRAIT
+# PHP8 Attribute
 
 <p>
     <a href="https://github.com/biiiiiigmonster/php8-aop/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-7389D8.svg?style=flat" ></a>

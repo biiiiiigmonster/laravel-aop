@@ -7,7 +7,8 @@ use Throwable;
 abstract class Pointer
 {
     protected mixed $original;
-    protected mixed $return;
+    protected mixed $value;
+    protected array $types;
     protected ?Throwable $throwable = null;
     protected ?object $curAspectInstance = null;// 当前所处切面实例
     protected ?object $curAttributeInstance = null;// 当前所处注解实例
@@ -15,33 +16,33 @@ abstract class Pointer
     /**
      * @return mixed
      */
-    public function getReturn(): mixed
+    public function getValue(): mixed
     {
-        return $this->return;
+        return $this->value;
     }
 
     /**
-     * @return object|null
+     * @param mixed $value
      */
-    public function getCurAspectInstance(): ?object
+    public function setValue(mixed $value): void
     {
-        return $this->curAspectInstance;
+        $this->value = $value;
     }
 
     /**
-     * @return object|null
+     * @return array
      */
-    public function getCurAttributeInstance(): ?object
+    public function getTypes(): array
     {
-        return $this->curAttributeInstance;
+        return $this->types;
     }
 
     /**
-     * @param mixed $return
+     * @param array $types
      */
-    public function setReturn(mixed $return): void
+    public function setTypes(array $types): void
     {
-        $this->return = $return;
+        $this->types = $types;
     }
 
     /**
@@ -58,6 +59,22 @@ abstract class Pointer
     public function setThrowable(?Throwable $throwable): void
     {
         $this->throwable = $throwable;
+    }
+
+    /**
+     * @return object|null
+     */
+    public function getCurAspectInstance(): ?object
+    {
+        return $this->curAspectInstance;
+    }
+
+    /**
+     * @return object|null
+     */
+    public function getCurAttributeInstance(): ?object
+    {
+        return $this->curAttributeInstance;
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace BiiiiiigMonster\Aop\Visitor;
+namespace BiiiiiigMonster\Aop\Visitors;
 
 use PhpParser\Node;
 use PhpParser\Node\Arg;

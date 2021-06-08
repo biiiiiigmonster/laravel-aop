@@ -1,9 +1,13 @@
 <?php
 
-namespace BiiiiiigMonster\Aop\Pointer;
+namespace BiiiiiigMonster\Aop\Pointers;
 
 use BiiiiiigMonster\Aop\Concerns\Pointer;
 use Closure;
+use ReflectionException;
+use ReflectionMethod;
+use ReflectionNamedType;
+use ReflectionUnionType;
 
 class FunctionPointer extends Pointer
 {
@@ -16,6 +20,7 @@ class FunctionPointer extends Pointer
      * @param array $variadicArguments
      * @param array $argsMap
      * @param Closure $original
+     * @throws ReflectionException
      */
     public function __construct(
         private string $className,
@@ -27,6 +32,24 @@ class FunctionPointer extends Pointer
     )
     {
         $this->original = $original;
+        // Set method return types.
+        $methodRfc = new ReflectionMethod($className, $method);
+        $types = [];
+        $returnType = $methodRfc->getReturnType();
+        if ($returnType instanceof ReflectionUnionType) {
+            foreach ($returnType as $returnNamedType) {
+                /** @var ReflectionNamedType $returnNamedType */
+                $types[] = $returnNamedType->getName();
+            }
+        } else {
+            /** @var ReflectionNamedType $returnType */
+            if ($returnType->allowsNull()) {
+                $types[] = 'null';
+            }
+            $types[] = $returnType->getName();
+        }
+
+        $this->setTypes($types);
     }
 
     /**

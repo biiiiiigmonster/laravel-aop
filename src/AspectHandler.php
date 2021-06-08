@@ -36,32 +36,32 @@ class AspectHandler
 
         try {
             // Execute Before
-            if ($before) $before->invoke($aspectInstance);
+            if ($before) $before->invoke($aspectInstance, $pointer);
             // Execute Around
-            $pointer->setReturn(
+            $pointer->setValue(
                 $around ? $around->invoke($aspectInstance, $pointer, $stack) : $stack($pointer)
             );
             // Execute After
-            if ($after) $after->invoke($aspectInstance);
-        } catch (Throwable $e) {
+            if ($after) $after->invoke($aspectInstance, $pointer);
+        } catch (Throwable $throwable) {
             // Set Throwable
-            $pointer->setThrowable($e);
+            $pointer->setThrowable($throwable);
         }
 
         //  Execute AfterThrowing If kernel has throwable
         if ($pointer->getThrowable()) {
             // Execute AfterThrowing
             if ($afterThrowing) {
-                $pointer->setReturn($afterThrowing->invoke($aspectInstance, $pointer->getThrowable()));
+                $pointer->setValue($afterThrowing->invoke($aspectInstance, $pointer->getThrowable(), $pointer));
             } else {
                 throw $pointer->getThrowable();
             }
         } else {
             // Execute AfterReturning
-            if ($afterReturning) $pointer->setReturn($afterReturning->invoke($aspectInstance, $pointer));
+            if ($afterReturning) $pointer->setValue($afterReturning->invoke($aspectInstance, $pointer));
         }
 
-        return $pointer->getReturn();
+        return $pointer->getValue();
     }
 
     /**
