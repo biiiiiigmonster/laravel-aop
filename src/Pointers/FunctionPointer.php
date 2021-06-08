@@ -37,16 +37,16 @@ class FunctionPointer extends Pointer
         $types = [];
         $returnType = $methodRfc->getReturnType();
         if ($returnType instanceof ReflectionUnionType) {
-            foreach ($returnType as $returnNamedType) {
-                /** @var ReflectionNamedType $returnNamedType */
+            foreach ($returnType->getTypes() as $returnNamedType) {
                 $types[] = $returnNamedType->getName();
             }
-        } else {
-            /** @var ReflectionNamedType $returnType */
+        } elseif ($returnType instanceof ReflectionNamedType) {
             if ($returnType->allowsNull()) {
                 $types[] = 'null';
             }
             $types[] = $returnType->getName();
+        } else {
+            $types[] = 'void';
         }
 
         $this->setTypes($types);
