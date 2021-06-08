@@ -50,7 +50,11 @@ class AopClassLoader
      */
     public function proxyFile(): void
     {
-        $proxyDir = $this->config['proxy'] ?? app_path();
+        if (!isset($this->config['proxy'])) {
+            return;
+        }
+
+        $proxyDir = $this->config['proxy'];
         $storagePath = $this->config['storage'] ?? sys_get_temp_dir();
         !is_dir($storagePath) && mkdir($storagePath);
 

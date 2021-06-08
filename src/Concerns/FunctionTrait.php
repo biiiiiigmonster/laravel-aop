@@ -6,7 +6,6 @@ use BiiiiiigMonster\Aop\Aop;
 use BiiiiiigMonster\Aop\Pointers\FunctionPointer;
 use Closure;
 use ReflectionException;
-use ReflectionMethod;
 
 trait FunctionTrait
 {
