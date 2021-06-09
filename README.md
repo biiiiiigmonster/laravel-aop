@@ -29,13 +29,14 @@ composer require biiiiiigmonster/php8-aop
 
 # Introduce
 feature
-1.支持切入点切入和注解切入；
+1.支持织入(切点)和引入(注解)；
 2.切面支持仅限于class中非静态public&protected方法；
-3.执行顺序(洋葱模型):
-2.1 前置类方法priority越大越先执行，后置类方法priority越大越后执行；
-2.2 priority相同时注解切面要外层与切入点切面；
-2.3 切面内方法执行顺序为：Before > Around(kernel) > After > AfterReturning；
-dev
-AfterThrowing handle
+3.执行顺序(洋葱模型)：前置类方法order越小越先执行，后置类方法order越大越后执行；
+fix
+ BeforeAdvice 在方法前切入。
+ After Advice 在方法后切入，抛出异常时也会切入。
+ AfterReturningAdvice 在方法返回后切入，抛出异常则不会切入。
+ AfterThrowingAdvice 在方法抛出异常时切入。
+ Around Advice 在方法执行前后切入，可以中断或忽略原有流程的执行。
 # License
 [MIT](./LICENSE)

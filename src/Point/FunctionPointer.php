@@ -1,7 +1,8 @@
 <?php
 
-namespace BiiiiiigMonster\Aop\Pointers;
+namespace BiiiiiigMonster\Aop\Point;
 
+use BiiiiiigMonster\Aop\AspectHandler;
 use BiiiiiigMonster\Aop\Concerns\Pointer;
 use Closure;
 use ReflectionException;
@@ -20,7 +21,7 @@ class FunctionPointer extends Pointer
      * @param string $method
      * @param array $arguments
      * @param array $variadicArguments
-     * @param Closure $original
+     * @param Closure $target
      * @throws ReflectionException
      */
     public function __construct(
@@ -28,10 +29,10 @@ class FunctionPointer extends Pointer
         private string $method,
         private array $arguments,// func_get_args() can't get named arguments in variadic parameter.
         private array $variadicArguments,// maybe contain named arguments, if give.
-        Closure $original,
+        Closure $target,
     )
     {
-        $this->original = $original;
+        $this->target = $target;
         // Parse ReflectionMethod Data.
         $methodRfc = new ReflectionMethod($className, $method);
         $this->argsMap = $this->parseArgsMap($methodRfc);
@@ -130,19 +131,37 @@ class FunctionPointer extends Pointer
     }
 
     /**
-     * Process the original method, this method should trigger by pipeline.
+     * Get the original parameter contains func_get_args() & variadic named arguments.
+     * @return array
      */
-    public function kernel()
+    protected function getOriginalArguments(): array
     {
-        $closure = $this->original;
-        // original parameter contains func_get_args() & variadic arguments
         $args = $this->getArguments();
         foreach ($this->getVariadicArguments() as $named => $argument) {
             if (is_string($named)) {
                 $args[$named] = $argument;
             }
         }
-        // original parameter
-        return $closure(...$args);
+
+        return $args;
+    }
+
+    /**
+     * Process the original method, this method should trigger by pipeline.
+     * @param array|null $params
+     * @return mixed
+     * @throws ReflectionException
+     */
+    public function process(?array $params = null): mixed
+    {
+        // Before Advice.
+        [$before] = AspectHandler::getAspectAdvices($this->curAttributeInstance::class);
+        if ($before) $before->invoke($this->curAttributeInstance, $this);
+
+        // call target.
+        $target = $this->target;
+        // Support customize cover the original parameter.
+        $args = $params ?? $this->getOriginalArguments();
+        return $target(...$args);
     }
 }

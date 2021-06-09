@@ -41,18 +41,18 @@ class Aop
                 foreach ($rfcClass->getAttributes() as $attribute) {
                     // 如果切入点存在当前方法所在类的注解数组中
                     if ($pointcut === $attribute->getName()) {
-                        $queue->insert([$aspectClass->newInstance(), $attribute->newInstance()], $aspectAttribute->priority);
+                        $queue->insert([$aspectClass->newInstance(), $attribute->newInstance()], $aspectAttribute->order);
                     }
                 }
                 foreach ($rfcClass->getMethod($method)->getAttributes() as $attribute) {
                     // 如果切入点存在当前方法的注解数组中
                     if ($pointcut === $attribute->getName()) {
-                        $queue->insert([$aspectClass->newInstance(), $attribute->newInstance()], $aspectAttribute->priority);
+                        $queue->insert([$aspectClass->newInstance(), $attribute->newInstance()], $aspectAttribute->order);
                     }
                 }
                 // 如果切入点匹配于当前方法
                 if (self::isMatch($pointcut, $className, $method)) {
-                    $queue->insert([$aspectClass->newInstance(), null], $aspectAttribute->priority);
+                    $queue->insert([$aspectClass->newInstance(), null], $aspectAttribute->order);
                 }
             }
         }

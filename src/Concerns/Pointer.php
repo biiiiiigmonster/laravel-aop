@@ -2,11 +2,14 @@
 
 namespace BiiiiiigMonster\Aop\Concerns;
 
+use BiiiiiigMonster\Aop\AspectHandler;
+use Closure;
 use Throwable;
 
 abstract class Pointer
 {
-    protected mixed $original;
+    protected AspectHandler $handler;
+    protected Closure $target;
     protected mixed $value;
     protected array $types;
     protected ?Throwable $throwable = null;
@@ -78,6 +81,22 @@ abstract class Pointer
     }
 
     /**
+     * @param Closure $target
+     */
+    public function setTarget(Closure $target): void
+    {
+        $this->target = $target;
+    }
+
+    /**
+     * @param AspectHandler $handler
+     */
+    public function setHandler(AspectHandler $handler): void
+    {
+        $this->handler = $handler;
+    }
+
+    /**
      * @param array $skin
      * @return Pointer
      */
@@ -91,6 +110,8 @@ abstract class Pointer
 
     /**
      * Process the original method, this method should trigger by pipeline.
+     * @param array|null $params
+     * @return mixed
      */
-    abstract public function kernel();
+    abstract public function process(?array $params = null): mixed;
 }

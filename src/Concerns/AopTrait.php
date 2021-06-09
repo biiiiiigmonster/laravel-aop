@@ -13,10 +13,16 @@ trait AopTrait
      */
     public static function __onion(array $skins): Closure
     {
-        $kernel = static fn(Pointer $pointer) => $pointer->kernel();
+        $kernel = static fn(Pointer $pointer) => $pointer->process();
 
-        $through = fn(Closure $stack, array $skin) => fn(Pointer $pointer) => (new AspectHandler())($pointer->into($skin), $stack);
+        $through = fn(Closure $stack, array $skin) => function (Pointer $pointer) use ($stack, $skin) {
+            $aspectHandler = new AspectHandler();
+            $pointer->into($skin);
+            $pointer->setHandler($aspectHandler);
+            $pointer->setTarget($stack);
+            $aspectHandler($pointer);
+        };
 
-        return array_reduce(array_reverse($skins), $through, $kernel);
+        return array_reduce($skins, $through, $kernel);
     }
 }

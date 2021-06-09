@@ -10,7 +10,7 @@ final class Aspect
     /**
      * Aop constructor.
      * @param array $pointcuts
-     * @param int $priority
+     * @param int $order
      */
     public function __construct(
         /**
@@ -22,7 +22,7 @@ final class Aspect
          * ]
          */
         public array $pointcuts = [],
-        public int $priority = 0,
+        public int $order = 0,
     )
     {
     }

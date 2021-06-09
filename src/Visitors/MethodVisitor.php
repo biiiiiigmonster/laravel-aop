@@ -84,7 +84,7 @@ class MethodVisitor extends NodeVisitorAbstract
             // variadic args
             new Arg($variadicArgs ?? new Array_([], ['kind' => Array_::KIND_SHORT])),
             // A closure that wrapped original method code.
-            new Arg(new Variable('__closure__')),
+            new Arg(new Variable('__target__')),
         ]);
 
         $returnType = $node->getReturnType();
@@ -115,15 +115,15 @@ class MethodVisitor extends NodeVisitorAbstract
             $closureUses[] = new Variable('__method__');
             $this->magicConstMethod = null;
         }
-        // Create Original Closure
-        $closure = new Expression(new Assign(new Variable('__closure__'), new Closure([
+        // Create Original Target
+        $target = new Expression(new Assign(new Variable('__target__'), new Closure([
             'params' => $node->getParams(),
             'uses' => $closureUses,
             'stmts' => $node->stmts,
             'returnType' => $node->getReturnType()
         ])));
 
-        $return = [$closure];
+        $return = [$target];
         if (isset($magicConstMethod)) array_unshift($return, $magicConstMethod);
         if (isset($magicConstFunction)) array_unshift($return, $magicConstFunction);
 
