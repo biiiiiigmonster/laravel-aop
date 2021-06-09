@@ -18,7 +18,6 @@ trait AopTrait
         $through = fn(Closure $stack, array $skin) => function (Pointer $pointer) use ($stack, $skin) {
             $aspectHandler = new AspectHandler();
             $pointer->into($skin);
-            $pointer->setHandler($aspectHandler);
             $pointer->setTarget($stack);
             $aspectHandler($pointer);
         };

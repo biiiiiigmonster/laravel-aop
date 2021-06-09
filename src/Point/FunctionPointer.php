@@ -36,7 +36,7 @@ class FunctionPointer extends Pointer
         // Parse ReflectionMethod Data.
         $methodRfc = new ReflectionMethod($className, $method);
         $this->argsMap = $this->parseArgsMap($methodRfc);
-        $this->types = $this->parseReturnType($methodRfc);
+        $this->returnTypes = $this->parseReturnType($methodRfc);
     }
 
     /**

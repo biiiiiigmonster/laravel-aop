@@ -35,7 +35,7 @@ class AspectHandler
 
         try {
             // Execute Around
-            $pointer->setValue(
+            $pointer->setReturn(
                 $around ? $around->invoke($aspectInstance, $pointer) : $pointer->process()
             );
         } catch (Throwable $throwable) {
@@ -49,16 +49,16 @@ class AspectHandler
         if ($pointer->getThrowable()) {
             // Execute AfterThrowing
             if ($afterThrowing) {
-                $pointer->setValue($afterThrowing->invoke($aspectInstance, $pointer->getThrowable(), $pointer));
+                $pointer->setReturn($afterThrowing->invoke($aspectInstance, $pointer->getThrowable(), $pointer));
             } else {
                 throw $pointer->getThrowable();
             }
         } else {
             // Execute AfterReturning
-            if ($afterReturning) $pointer->setValue($afterReturning->invoke($aspectInstance, $pointer));
+            if ($afterReturning) $pointer->setReturn($afterReturning->invoke($aspectInstance, $pointer));
         }
 
-        return $pointer->getValue();
+        return $pointer->getReturn();
     }
 
     /**

@@ -8,10 +8,9 @@ use Throwable;
 
 abstract class Pointer
 {
-    protected AspectHandler $handler;
     protected Closure $target;
-    protected mixed $value;
-    protected array $types;
+    protected mixed $return;
+    protected array $returnTypes;
     protected ?Throwable $throwable = null;
     protected ?object $curAspectInstance = null;// 当前所处切面实例
     protected ?object $curAttributeInstance = null;// 当前所处注解实例
@@ -19,33 +18,33 @@ abstract class Pointer
     /**
      * @return mixed
      */
-    public function getValue(): mixed
+    public function getReturn(): mixed
     {
-        return $this->value;
+        return $this->return;
     }
 
     /**
-     * @param mixed $value
+     * @param mixed $return
      */
-    public function setValue(mixed $value): void
+    public function setReturn(mixed $return): void
     {
-        $this->value = $value;
+        $this->return = $return;
     }
 
     /**
      * @return array
      */
-    public function getTypes(): array
+    public function getReturnTypes(): array
     {
-        return $this->types;
+        return $this->returnTypes;
     }
 
     /**
-     * @param array $types
+     * @param array $returnTypes
      */
-    public function setTypes(array $types): void
+    public function setReturnTypes(array $returnTypes): void
     {
-        $this->types = $types;
+        $this->returnTypes = $returnTypes;
     }
 
     /**
@@ -86,14 +85,6 @@ abstract class Pointer
     public function setTarget(Closure $target): void
     {
         $this->target = $target;
-    }
-
-    /**
-     * @param AspectHandler $handler
-     */
-    public function setHandler(AspectHandler $handler): void
-    {
-        $this->handler = $handler;
     }
 
     /**
