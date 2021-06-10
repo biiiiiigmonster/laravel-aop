@@ -40,14 +40,6 @@ abstract class JoinPoint
     }
 
     /**
-     * @param array $returnTypes
-     */
-    public function setReturnTypes(array $returnTypes): void
-    {
-        $this->returnTypes = $returnTypes;
-    }
-
-    /**
      * @return Throwable|null
      */
     public function getThrowable(): ?Throwable
@@ -85,14 +77,6 @@ abstract class JoinPoint
     public function setPipeline(Closure $pipeline): void
     {
         $this->pipeline = $pipeline;
-    }
-
-    /**
-     * @param Closure $target
-     */
-    public function setTarget(Closure $target): void
-    {
-        $this->target = $target;
     }
 
     /**

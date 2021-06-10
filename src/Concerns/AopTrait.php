@@ -13,7 +13,7 @@ trait AopTrait
      */
     public static function __pipeline(array $pipes): Closure
     {
-        $target = static fn(JoinPoint $joinPoint) => $joinPoint->process();
+        $target = static fn(JoinPoint $joinPoint) => $joinPoint->invokeTarget();
 
         $through = fn(Closure $pipeline, array $pipe) => function (JoinPoint $joinPoint) use ($pipeline, $pipe) {
             $aspectHandler = new AspectHandler();

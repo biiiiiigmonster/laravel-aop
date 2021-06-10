@@ -5,6 +5,7 @@ namespace BiiiiiigMonster\Aop\Point;
 use BiiiiiigMonster\Aop\AspectHandler;
 use BiiiiiigMonster\Aop\Concerns\JoinPoint;
 use Closure;
+use JetBrains\PhpStorm\Pure;
 use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
@@ -134,7 +135,7 @@ class FunctionJoinPoint extends JoinPoint
      * Get the original parameter contains func_get_args() & variadic named arguments.
      * @return array
      */
-    protected function getOriginalArguments(): array
+    #[Pure] protected function getOriginalArguments(): array
     {
         $args = $this->getArguments();
         foreach ($this->getVariadicArguments() as $named => $argument) {
@@ -167,8 +168,8 @@ class FunctionJoinPoint extends JoinPoint
     public function process(): mixed
     {
         // Before Advice.
-        [$before] = AspectHandler::getAspectAdvices($this->curAttributeInstance::class);
-        if ($before) $before->invoke($this->curAttributeInstance, $this);
+        [$before] = AspectHandler::getAspectAdvices($this->curAspectInstance::class);
+        if ($before) $before->invoke($this->curAspectInstance, $this);
 
         $closure = $this->pipeline;
         return $closure($this);
