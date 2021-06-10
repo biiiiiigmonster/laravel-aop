@@ -1,6 +1,6 @@
 <?php
 
-namespace BiiiiiigMonster\Aop\Point;
+namespace BiiiiiigMonster\Aop\Points;
 
 use BiiiiiigMonster\Aop\AspectHandler;
 use BiiiiiigMonster\Aop\Concerns\JoinPoint;
@@ -11,7 +11,7 @@ use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionUnionType;
 
-class FunctionJoinPoint extends JoinPoint
+class ProceedingJoinPoint extends JoinPoint
 {
     private array $argsMap;
 

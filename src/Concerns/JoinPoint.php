@@ -8,7 +8,7 @@ use Throwable;
 abstract class JoinPoint
 {
     protected Closure $pipeline;// pipeline is a wrapped target with closure, pipeline's kernel is target!
-    protected mixed $target;// When FunctionJoinPoint is a closure; When ParameterJoinPoint is a value;
+    protected mixed $target;// When ProceedingJoinPoint is a closure; When ParameterJoinPoint is a value;
     protected mixed $return;
     protected array $returnTypes;
     protected ?Throwable $throwable = null;
@@ -91,10 +91,14 @@ abstract class JoinPoint
         return $this;
     }
 
+    /**
+     * Process the original target.
+     * @return mixed
+     */
     abstract public function invokeTarget(): mixed;
 
     /**
-     * Process the original method, this method should trigger by pipeline.
+     * This method should trigger by pipeline.
      * @return mixed
      */
     abstract public function process(): mixed;

@@ -3,7 +3,7 @@
 namespace BiiiiiigMonster\Aop\Concerns;
 
 use BiiiiiigMonster\Aop\Aop;
-use BiiiiiigMonster\Aop\Point\FunctionJoinPoint;
+use BiiiiiigMonster\Aop\Points\ProceedingJoinPoint;
 use Closure;
 use ReflectionException;
 
@@ -25,7 +25,7 @@ trait FunctionTrait
     public static function __proxyCall(string $className, string $method, array $arguments,array $variadicArguments, Closure $target): mixed
     {
         $pipeline = self::__pipeline(Aop::get($className, $method));
-        $joinPoint = new FunctionJoinPoint($className, $method, $arguments, $variadicArguments, $target);
+        $joinPoint = new ProceedingJoinPoint($className, $method, $arguments, $variadicArguments, $target);
 
         return $pipeline($joinPoint);
     }
