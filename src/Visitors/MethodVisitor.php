@@ -22,10 +22,6 @@ use PhpParser\NodeVisitorAbstract;
 
 class MethodVisitor extends NodeVisitorAbstract
 {
-    /**
-     * Ignore methods
-     */
-    public const IGNORE_METHODS = ['init'];
     private ?Variable $magicConstFunction = null;
     private ?Variable $magicConstMethod = null;
 
@@ -40,7 +36,6 @@ class MethodVisitor extends NodeVisitorAbstract
                 $node->isStatic()
                 || $node->isMagic()
                 || $node->isPrivate()
-                || in_array($node->name->toString(), self::IGNORE_METHODS)
             ) {
                 return $node;
             }
