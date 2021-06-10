@@ -8,20 +8,20 @@ use Closure;
 trait AopTrait
 {
     /**
-     * @param array $skins
+     * @param array $pipes
      * @return mixed
      */
-    public static function __onion(array $skins): Closure
+    public static function __pipeline(array $pipes): Closure
     {
-        $kernel = static fn(Pointer $pointer) => $pointer->process();
+        $target = static fn(JoinPoint $joinPoint) => $joinPoint->process();
 
-        $through = fn(Closure $stack, array $skin) => function (Pointer $pointer) use ($stack, $skin) {
+        $through = fn(Closure $pipeline, array $pipe) => function (JoinPoint $joinPoint) use ($pipeline, $pipe) {
             $aspectHandler = new AspectHandler();
-            $pointer->into($skin);
-            $pointer->setTarget($stack);
-            $aspectHandler($pointer);
+            $joinPoint->through($pipe);
+            $joinPoint->setPipeline($pipeline);
+            return $aspectHandler($joinPoint);
         };
 
-        return array_reduce($skins, $through, $kernel);
+        return array_reduce($pipes, $through, $target);
     }
 }

@@ -7,7 +7,7 @@ use BiiiiiigMonster\Aop\Attributes\AfterReturning;
 use BiiiiiigMonster\Aop\Attributes\AfterThrowing;
 use BiiiiiigMonster\Aop\Attributes\Around;
 use BiiiiiigMonster\Aop\Attributes\Before;
-use BiiiiiigMonster\Aop\Concerns\Pointer;
+use BiiiiiigMonster\Aop\Concerns\JoinPoint;
 use Closure;
 use ReflectionClass;
 use ReflectionException;
@@ -23,42 +23,42 @@ class AspectHandler
     private static array $advices = [];
 
     /**
-     * @param Pointer $pointer
+     * @param JoinPoint $joinPoint
      * @return mixed
      * @throws ReflectionException
      * @throws Throwable
      */
-    public function __invoke(Pointer $pointer): mixed
+    public function __invoke(JoinPoint $joinPoint): mixed
     {
-        $aspectInstance = $pointer->getCurAspectInstance();
+        $aspectInstance = $joinPoint->getCurAspectInstance();
         [$before, $around, $after, $afterThrowing, $afterReturning] = self::getAspectAdvices($aspectInstance::class);
 
         try {
             // Execute Around
-            $pointer->setReturn(
-                $around ? $around->invoke($aspectInstance, $pointer) : $pointer->process()
+            $joinPoint->setReturn(
+                $around ? $around->invoke($aspectInstance, $joinPoint) : $joinPoint->process()
             );
         } catch (Throwable $throwable) {
             // Set Throwable
-            $pointer->setThrowable($throwable);
+            $joinPoint->setThrowable($throwable);
         }
         // Execute After
-        if ($after) $after->invoke($aspectInstance, $pointer);
+        if ($after) $after->invoke($aspectInstance, $joinPoint);
 
         //  Execute AfterThrowing If kernel has throwable
-        if ($pointer->getThrowable()) {
+        if ($joinPoint->getThrowable()) {
             // Execute AfterThrowing
             if ($afterThrowing) {
-                $pointer->setReturn($afterThrowing->invoke($aspectInstance, $pointer->getThrowable(), $pointer));
+                $joinPoint->setReturn($afterThrowing->invoke($aspectInstance, $joinPoint->getThrowable(), $joinPoint));
             } else {
-                throw $pointer->getThrowable();
+                throw $joinPoint->getThrowable();
             }
         } else {
             // Execute AfterReturning
-            if ($afterReturning) $pointer->setReturn($afterReturning->invoke($aspectInstance, $pointer));
+            if ($afterReturning) $joinPoint->setReturn($afterReturning->invoke($aspectInstance, $joinPoint));
         }
 
-        return $pointer->getReturn();
+        return $joinPoint->getReturn();
     }
 
     /**

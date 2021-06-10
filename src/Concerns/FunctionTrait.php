@@ -3,7 +3,7 @@
 namespace BiiiiiigMonster\Aop\Concerns;
 
 use BiiiiiigMonster\Aop\Aop;
-use BiiiiiigMonster\Aop\Point\FunctionPointer;
+use BiiiiiigMonster\Aop\Point\FunctionJoinPoint;
 use Closure;
 use ReflectionException;
 
@@ -24,9 +24,9 @@ trait FunctionTrait
      */
     public static function __proxyCall(string $className, string $method, array $arguments,array $variadicArguments, Closure $target): mixed
     {
-        $onion = self::__onion(Aop::get($className, $method));
-        $pointer = new FunctionPointer($className, $method, $arguments, $variadicArguments, $target);
+        $pipeline = self::__pipeline(Aop::get($className, $method));
+        $joinPoint = new FunctionJoinPoint($className, $method, $arguments, $variadicArguments, $target);
 
-        return $onion($pointer);
+        return $pipeline($joinPoint);
     }
 }

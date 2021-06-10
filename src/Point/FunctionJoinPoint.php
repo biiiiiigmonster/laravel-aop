@@ -3,19 +3,19 @@
 namespace BiiiiiigMonster\Aop\Point;
 
 use BiiiiiigMonster\Aop\AspectHandler;
-use BiiiiiigMonster\Aop\Concerns\Pointer;
+use BiiiiiigMonster\Aop\Concerns\JoinPoint;
 use Closure;
 use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionUnionType;
 
-class FunctionPointer extends Pointer
+class FunctionJoinPoint extends JoinPoint
 {
     private array $argsMap;
 
     /**
-     * Pointer constructor.
+     * JoinPoint constructor.
      *
      * @param string $className
      * @param string $method
@@ -84,7 +84,7 @@ class FunctionPointer extends Pointer
             $types[] = 'void';
         }
 
-        return $types;
+        return array_unique($types);
     }
 
     /**
@@ -147,21 +147,30 @@ class FunctionPointer extends Pointer
     }
 
     /**
+     * invoke the original method
+     * @return mixed
+     */
+    public function invokeTarget(): mixed
+    {
+        // call target.
+        $target = $this->target;
+        $args = $this->getOriginalArguments();
+
+        return $target(...$args);
+    }
+
+    /**
      * Process the original method, this method should trigger by pipeline.
-     * @param array|null $params
      * @return mixed
      * @throws ReflectionException
      */
-    public function process(?array $params = null): mixed
+    public function process(): mixed
     {
         // Before Advice.
         [$before] = AspectHandler::getAspectAdvices($this->curAttributeInstance::class);
         if ($before) $before->invoke($this->curAttributeInstance, $this);
 
-        // call target.
-        $target = $this->target;
-        // Support customize cover the original parameter.
-        $args = $params ?? $this->getOriginalArguments();
-        return $target(...$args);
+        $closure = $this->pipeline;
+        return $closure($this);
     }
 }

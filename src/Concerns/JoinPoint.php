@@ -2,18 +2,18 @@
 
 namespace BiiiiiigMonster\Aop\Concerns;
 
-use BiiiiiigMonster\Aop\AspectHandler;
 use Closure;
 use Throwable;
 
-abstract class Pointer
+abstract class JoinPoint
 {
-    protected Closure $target;
+    protected Closure $pipeline;// pipeline is a wrapped target with closure, pipeline's kernel is target!
+    protected mixed $target;// When FunctionJoinPoint is a closure; When ParameterJoinPoint is a value;
     protected mixed $return;
     protected array $returnTypes;
     protected ?Throwable $throwable = null;
-    protected ?object $curAspectInstance = null;// 当前所处切面实例
-    protected ?object $curAttributeInstance = null;// 当前所处注解实例
+    protected object $curAspectInstance;// current Aspect Instance
+    protected ?object $curAttributeInstance = null;// current Attribute Instance
 
     /**
      * @return mixed
@@ -80,6 +80,14 @@ abstract class Pointer
     }
 
     /**
+     * @param Closure $pipeline
+     */
+    public function setPipeline(Closure $pipeline): void
+    {
+        $this->pipeline = $pipeline;
+    }
+
+    /**
      * @param Closure $target
      */
     public function setTarget(Closure $target): void
@@ -88,21 +96,22 @@ abstract class Pointer
     }
 
     /**
-     * @param array $skin
-     * @return Pointer
+     * @param array $pipe [AspectInstance, ?AttributeInstance]
+     * @return JoinPoint
      */
-    public function into(array $skin): static
+    public function through(array $pipe): static
     {
-        $this->curAspectInstance = $skin[0] ?? null;
-        $this->curAttributeInstance = $skin[1] ?? null;
+        $this->curAspectInstance = $pipe[0];
+        $this->curAttributeInstance = $pipe[1] ?? null;
 
         return $this;
     }
 
+    abstract public function invokeTarget(): mixed;
+
     /**
      * Process the original method, this method should trigger by pipeline.
-     * @param array|null $params
      * @return mixed
      */
-    abstract public function process(?array $params = null): mixed;
+    abstract public function process(): mixed;
 }
