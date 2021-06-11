@@ -14,27 +14,25 @@ class AopClassLoader
     /**
      * AopClassLoader constructor.
      * @param ComposerClassLoader $composerLoader
-     * @param array $config
      */
     public function __construct(
-        private ComposerClassLoader $composerLoader,
-        private array $config
+        private ComposerClassLoader $composerLoader
     )
     {
         $this->proxyFile();
     }
 
     /**
-     * @param array $config
+     * Aop ClassLoader init.
      */
-    public static function init(array $config = []): void
+    public static function init(): void
     {
         $loaders = spl_autoload_functions();
 
         foreach ($loaders as &$loader) {
             $unregisterLoader = $loader;
             if (is_array($loader) && $loader[0] instanceof ComposerClassLoader) {
-                $loader[0] = new static($loader[0], $config);
+                $loader[0] = new static($loader[0]);
             }
             spl_autoload_unregister($unregisterLoader);
         }
@@ -50,15 +48,12 @@ class AopClassLoader
      */
     public function proxyFile(): void
     {
-        if (!isset($this->config['proxy'])) {
-            return;
-        }
-
-        $proxyDir = $this->config['proxy'];
-        $storagePath = $this->config['storage'] ?? sys_get_temp_dir();
+        $scanDir = config('aop.scan_dir');
+        $ignore = config('aop.ignore');
+        $storagePath = config('aop.storage_path');
         !is_dir($storagePath) && mkdir($storagePath);
 
-        $files = Finder::create()->in($proxyDir)->exclude(dirname(__DIR__))->files()->name('*.php');
+        $files = Finder::create()->in($scanDir)->exclude($ignore)->files()->name('*.php');
         foreach ($files as $file) {
             // 实例化代理
             $proxy = new Proxy([$classVisitor = new ClassVisitor(), new MethodVisitor()]);

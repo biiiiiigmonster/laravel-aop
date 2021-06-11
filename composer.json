@@ -19,5 +19,12 @@
         "laravel/framework": "^8.0",
         "symfony/finder": "^5.0",
         "nikic/php-parser": "^4.10"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "BiiiiiigMonster\\Aop\\AopServiceProvider"
+            ]
+        }
     }
 }
