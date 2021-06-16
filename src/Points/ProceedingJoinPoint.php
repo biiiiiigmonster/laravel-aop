@@ -167,8 +167,8 @@ class ProceedingJoinPoint extends JoinPoint
      */
     public function process(): mixed
     {
-        // Before Advice.
         [$before] = AspectHandler::getAspectAdvices($this->curAspectInstance::class);
+        // Execute "Before"
         if ($before) $before->invoke($this->curAspectInstance, $this);
 
         $closure = $this->pipeline;

@@ -7,8 +7,8 @@ use Throwable;
 
 abstract class JoinPoint
 {
-    protected Closure $pipeline;// pipeline is a wrapped target with closure, pipeline's kernel is target!
-    protected mixed $target;// When ProceedingJoinPoint is a closure; When ParameterJoinPoint is a value;
+    protected Closure $pipeline;// pipeline is a wrapped target with closure, pipeline's kernel is the target!
+    protected mixed $target;// When ProceedingJoinPoint, it's a closure; When ParameterJoinPoint, it's a value;
     protected mixed $return;
     protected array $returnTypes;
     protected ?Throwable $throwable = null;
@@ -56,9 +56,9 @@ abstract class JoinPoint
     }
 
     /**
-     * @return object|null
+     * @return object
      */
-    public function getCurAspectInstance(): ?object
+    public function getCurAspectInstance(): object
     {
         return $this->curAspectInstance;
     }

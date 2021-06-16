@@ -22,7 +22,7 @@ trait FunctionTrait
      * @return mixed
      * @throws ReflectionException
      */
-    public static function __proxyCall(string $className, string $method, array $arguments,array $variadicArguments, Closure $target): mixed
+    public static function __proxyCall(string $className, string $method, array $arguments, array $variadicArguments, Closure $target): mixed
     {
         $pipeline = self::__pipeline(Aop::get($className, $method));
         $joinPoint = new ProceedingJoinPoint($className, $method, $arguments, $variadicArguments, $target);

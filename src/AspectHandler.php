@@ -34,27 +34,28 @@ class AspectHandler
         [$before, $around, $after, $afterThrowing, $afterReturning] = self::getAspectAdvices($aspectInstance::class);
 
         try {
-            // Execute Around
+            // Execute "Around"
             $joinPoint->setReturn(
                 $around ? $around->invoke($aspectInstance, $joinPoint) : $joinPoint->process()
             );
         } catch (Throwable $throwable) {
-            // Set Throwable
+            // Set "Throwable"
             $joinPoint->setThrowable($throwable);
+        } finally {
+            // Execute "After"
+            if ($after) $after->invoke($aspectInstance, $joinPoint);
         }
-        // Execute After
-        if ($after) $after->invoke($aspectInstance, $joinPoint);
 
-        //  Execute AfterThrowing If kernel has throwable
+        //  Execute "AfterThrowing" if target has throwable
         if ($joinPoint->getThrowable()) {
-            // Execute AfterThrowing
+            // Execute "AfterThrowing"
             if ($afterThrowing) {
                 $joinPoint->setReturn($afterThrowing->invoke($aspectInstance, $joinPoint->getThrowable(), $joinPoint));
             } else {
                 throw $joinPoint->getThrowable();
             }
         } else {
-            // Execute AfterReturning
+            // Execute "AfterReturning"
             if ($afterReturning) $joinPoint->setReturn($afterReturning->invoke($aspectInstance, $joinPoint));
         }
 

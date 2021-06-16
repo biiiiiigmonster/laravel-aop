@@ -53,11 +53,10 @@ class ClassVisitor extends NodeVisitorAbstract
      */
     public function isAspect(): bool
     {
-        foreach ($this->attributes as $attribute) {
-            foreach ($this->uses as $alias => $use) {
-                if ($use !== self::ASPECT) continue;
-                $useArr = explode('\\', $use);
-                if ($attribute === $alias || $attribute === end($useArr)) {
+        foreach ($this->uses as $alias => $use) {
+            if ($use !== self::ASPECT) continue;
+            foreach ($this->attributes as $attribute) {
+                if ($attribute === $alias || str_ends_with($use, $attribute)) {
                     return true;
                 }
             }

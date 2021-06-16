@@ -6,6 +6,7 @@ use BiiiiiigMonster\Aop\Visitors\ClassVisitor;
 use BiiiiiigMonster\Aop\Visitors\MethodVisitor;
 use Composer\Autoload\ClassLoader as ComposerClassLoader;
 use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\SplFileInfo;
 
 class AopClassLoader
 {
@@ -48,12 +49,17 @@ class AopClassLoader
      */
     public function proxyFile(): void
     {
-        $scanDir = config('aop.scan_dir');
-        $ignore = config('aop.ignore');
+        $scanDirs = config('aop.scan_dirs');
         $storagePath = config('aop.storage_path');
+
         !is_dir($storagePath) && mkdir($storagePath);
 
-        $files = Finder::create()->in($scanDir)->exclude($ignore)->files()->name('*.php');
+        $files = Finder::create()
+            ->in($scanDirs)
+            ->files()
+            ->filter(fn(SplFileInfo $file) => !str_starts_with($file->getRealPath(), dirname(__DIR__)))
+            ->name('*.php');
+
         foreach ($files as $file) {
             // 实例化代理
             $proxy = new Proxy([$classVisitor = new ClassVisitor(), new MethodVisitor()]);
