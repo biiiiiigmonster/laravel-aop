@@ -30,29 +30,35 @@ class Aop
     public static function parse(string $className, string $method): array
     {
         $rfcClass = new ReflectionClass($className);
+        $rfcClassAttributes = $rfcClass->getAttributes();
+        $rfcMethodAttributes = $rfcClass->getMethod($method)->getAttributes();
         $queue = new SplPriorityQueue();
 
         foreach (self::$aspects as $aspect) {
             $aspectClass = new ReflectionClass($aspect);
             /** @var Aspect $aspectAttribute */
             $aspectAttribute = $aspectClass->getAttributes(Aspect::class)[0]->newInstance();
-            // 允许同一个切面多次注册指定方法
             foreach ($aspectAttribute->pointcuts as $pointcut) {
-                foreach ($rfcClass->getAttributes() as $attribute) {
-                    // 如果切入点存在当前方法所在类的注解数组中
+                /**----------引入(注解)-----------*/
+                foreach ($rfcMethodAttributes as $attribute) {
                     if ($pointcut === $attribute->getName()) {
+                        // 如果切入点存在当前方法的注解数组中
                         $queue->insert([$aspectClass->newInstance(), $attribute->newInstance()], $aspectAttribute->order);
+                        continue 3;
                     }
                 }
-                foreach ($rfcClass->getMethod($method)->getAttributes() as $attribute) {
-                    // 如果切入点存在当前方法的注解数组中
+                foreach ($rfcClassAttributes as $attribute) {
                     if ($pointcut === $attribute->getName()) {
+                        // 如果切入点存在当前方法所在类的注解数组中
                         $queue->insert([$aspectClass->newInstance(), $attribute->newInstance()], $aspectAttribute->order);
+                        continue 3;
                     }
                 }
-                // 如果切入点匹配于当前方法
+                /**--------织入(切点)----------*/
                 if (self::isMatch($pointcut, $className, $method)) {
+                    // 如果切入点匹配于当前方法
                     $queue->insert([$aspectClass->newInstance(), null], $aspectAttribute->order);
+                    continue 2;
                 }
             }
         }
