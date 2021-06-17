@@ -1,9 +1,7 @@
 <?php
 
 return [
-    'scan_dirs' => [
-        app_path(),
-    ],
+    'scan_dirs' => [],
     'storage_path' => sys_get_temp_dir(),
     'cache' => false,
 ];

@@ -91,6 +91,7 @@ class Aop
     public static function isMatch(string $pointcut, string $className, string $method): bool
     {
         $pointcutArr = explode('::', $pointcut);
+        // Classname must eq.
         if ($className !== $pointcutArr[0]) {
             return false;
         }

@@ -5,7 +5,6 @@ namespace BiiiiiigMonster\Aop\Points;
 use BiiiiiigMonster\Aop\AspectHandler;
 use BiiiiiigMonster\Aop\Concerns\JoinPoint;
 use Closure;
-use JetBrains\PhpStorm\Pure;
 use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
@@ -65,6 +64,7 @@ class ProceedingJoinPoint extends JoinPoint
     }
 
     /**
+     * Parse the return types by the "ReflectionMethod".
      * @param ReflectionMethod $reflectionMethod
      * @return array
      */
@@ -89,6 +89,7 @@ class ProceedingJoinPoint extends JoinPoint
     }
 
     /**
+     * Parse the arguments map by the "ReflectionMethod".
      * @param ReflectionMethod $reflectionMethod
      * @return array
      * @throws ReflectionException
@@ -135,7 +136,7 @@ class ProceedingJoinPoint extends JoinPoint
      * Get the original parameter contains func_get_args() & variadic named arguments.
      * @return array
      */
-    #[Pure] protected function getOriginalArguments(): array
+    protected function getOriginalArguments(): array
     {
         $args = $this->getArguments();
         foreach ($this->getVariadicArguments() as $named => $argument) {

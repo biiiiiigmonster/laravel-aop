@@ -15,25 +15,28 @@ class AopClassLoader
     /**
      * AopClassLoader constructor.
      * @param ComposerClassLoader $composerLoader
+     * @param array $config
      */
     public function __construct(
-        private ComposerClassLoader $composerLoader
+        private ComposerClassLoader $composerLoader,
+        array $config
     )
     {
-        $this->proxyFile();
+        $this->proxyFile($config);
     }
 
     /**
      * Aop ClassLoader init.
+     * @param array $config
      */
-    public static function init(): void
+    public static function init(array $config): void
     {
         $loaders = spl_autoload_functions();
 
         foreach ($loaders as &$loader) {
             $unregisterLoader = $loader;
             if (is_array($loader) && $loader[0] instanceof ComposerClassLoader) {
-                $loader[0] = new static($loader[0]);
+                $loader[0] = new static($loader[0], $config);
             }
             spl_autoload_unregister($unregisterLoader);
         }
@@ -46,12 +49,16 @@ class AopClassLoader
 
     /**
      * Create Proxy File.
+     * @param array $config
      */
-    public function proxyFile(): void
+    public function proxyFile(array $config): void
     {
-        $scanDirs = config('aop.scan_dirs');
-        $storagePath = config('aop.storage_path');
+        $scanDirs = $config['scan_dirs'] ?? [];
+        if(empty($scanDirs)) {
+            return;
+        }
 
+        $storagePath = $config['storage_path'] ?? sys_get_temp_dir();
         !is_dir($storagePath) && mkdir($storagePath);
 
         $files = Finder::create()

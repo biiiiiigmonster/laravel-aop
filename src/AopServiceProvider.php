@@ -12,7 +12,7 @@ class AopServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(dirname(__DIR__) . '/config/aop.php', 'aop');
         // Aop class loader register
-        AopClassLoader::init();
+        AopClassLoader::init(config('aop'));
     }
 
     public function boot()
