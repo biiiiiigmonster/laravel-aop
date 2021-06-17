@@ -38,5 +38,10 @@ fix
  AfterReturningAdvice 在方法返回后切入，抛出异常则不会切入。
  AfterThrowingAdvice 在方法抛出异常时切入。
  Around Advice 在方法执行前后切入，可以中断或忽略原有流程的执行。
+todo
+1.支持代理缓存
+2.完善config配置信息
+3.readme文档编写
+4.release 1.0.0
 # License
 [MIT](./LICENSE)
