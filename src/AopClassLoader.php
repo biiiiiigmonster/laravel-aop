@@ -10,6 +10,9 @@ use Symfony\Component\Finder\SplFileInfo;
 
 class AopClassLoader
 {
+    /**
+     * @var string[]
+     */
     private array $classMap = [];
 
     /**
@@ -84,8 +87,9 @@ class AopClassLoader
             // 代理文件预设路径
             $proxyFilepath = $proxy->proxyFilepath($aopConfig->getStorageDir());
             // 生成代理文件(在生成代理文件的过程中，源代码相关信息会被存储在访客节点类中)
-            $proxy->generateProxyFile($proxyFilepath);
-            $this->classMap[$classVisitor->getClass()] = $proxyFilepath;
+            if($proxy->generateProxyFile($proxyFilepath)){
+                $this->classMap[$classVisitor->getClass()] = $proxyFilepath;
+            }
             // 判断当前扫描结果，如果是Aspect注解，那就进行注册
             if ($classVisitor->isAspect()) {
                 Aop::register($classVisitor->getClass());
@@ -106,12 +110,10 @@ class AopClassLoader
 
     /**
      * @param string $class
-     * @return string|null
+     * @return false|string
      */
-    public function findFile(string $class): ?string
+    public function findFile(string $class): bool|string
     {
-        $file = $this->classMap[$class] ?? $this->composerLoader->findFile($class);
-
-        return is_string($file) ? $file : null;
+        return $this->classMap[$class] ?? $this->composerLoader->findFile($class);
     }
 }

@@ -11,8 +11,8 @@ class AopConfig
 
     private function __construct(
         private array $scanDirs = [],
-        private string $storageDir = '',
         private bool $cacheable = false,
+        private string $storageDir = '',
         private array $aspects = [],
     )
     {
