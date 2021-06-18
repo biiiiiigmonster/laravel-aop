@@ -97,9 +97,16 @@ class AopClassLoader
         }
     }
 
-    public function lazyLoad($class): void
+    /**
+     * Lazy load class file.
+     * @param $class
+     * @return string
+     */
+    public function lazyLoad($class): string
     {
+        $file = $this->composerLoader->findFile($class);
 
+        return $file;
     }
 
     /**
@@ -117,10 +124,10 @@ class AopClassLoader
 
     /**
      * @param string $class
-     * @return false|string
+     * @return string
      */
-    public function findFile(string $class): bool|string
+    public function findFile(string $class): string
     {
-        return $this->classMap[$class] ?? $this->composerLoader->findFile($class);
+        return $this->classMap[$class] ?? $this->lazyLoad($class);
     }
 }
