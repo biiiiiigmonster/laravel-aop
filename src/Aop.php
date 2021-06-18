@@ -14,6 +14,7 @@ class Aop
     private static array $mapping = [];
 
     /**
+     * Register aspect class.
      * @param string $aspectClass
      */
     public static function register(string $aspectClass): void
@@ -22,6 +23,16 @@ class Aop
     }
 
     /**
+     * Get aspects.
+     * @return array
+     */
+    public static function getAspects(): array
+    {
+        return self::$aspects;
+    }
+
+    /**
+     * Parse the class & method aspect instance.
      * @param string $className
      * @param string $method
      * @return array
@@ -34,7 +45,7 @@ class Aop
         $rfcMethodAttributes = $rfcClass->getMethod($method)->getAttributes();
         $queue = new SplPriorityQueue();
 
-        foreach (self::$aspects as $aspect) {
+        foreach (self::getAspects() as $aspect) {
             $aspectClass = new ReflectionClass($aspect);
             /** @var Aspect $aspectAttribute */
             $aspectAttribute = $aspectClass->getAttributes(Aspect::class)[0]->newInstance();
@@ -72,6 +83,7 @@ class Aop
     }
 
     /**
+     * Get the method aspect map.
      * @param string $className
      * @param string $method
      * @return array
@@ -83,6 +95,7 @@ class Aop
     }
 
     /**
+     * Judgment the method whether match the pointcut rule.
      * @param string $className
      * @param string $method
      * @param string $pointcut

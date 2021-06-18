@@ -22,7 +22,10 @@ class AopClassLoader
         array $config
     )
     {
-        $this->proxyFile($config);
+        $aopConfig = AopConfig::instance($config);
+        if (!empty($aopConfig->getScanDirs())) {
+            $this->scan();
+        }
     }
 
     /**
@@ -48,32 +51,30 @@ class AopClassLoader
     }
 
     /**
-     * Create Proxy File.
-     * @param array $config
+     * Scan file.
      */
-    public function proxyFile(array $config): void
+    public function scan(): void
     {
-        $scanDirs = $config['scan_dirs'] ?? [];
-        if(empty($scanDirs)) {
-            return;
-        }
-
-        $storagePath = $config['storage_path'] ?? sys_get_temp_dir();
-        !is_dir($storagePath) && mkdir($storagePath);
+        $aopConfig = AopConfig::instance();
 
         $files = Finder::create()
-            ->in($scanDirs)
+            ->in($aopConfig->getScanDirs())
             ->files()
             ->filter(fn(SplFileInfo $file) => !str_starts_with($file->getRealPath(), dirname(__DIR__)))
             ->name('*.php');
 
         foreach ($files as $file) {
+            $proxyFile = sprintf(
+                '%s' . DIRECTORY_SEPARATOR . '%s',
+                $aopConfig->getStoragePath(),
+                $file->getFilename(),
+            );
             // 实例化代理
             $proxy = new Proxy([$classVisitor = new ClassVisitor(), new MethodVisitor()]);
-            $proxyFile = $proxy->generateProxyFile(
-                $file->getContents(),
-                sprintf('%s' . DIRECTORY_SEPARATOR . '%s', $storagePath, $file->getFilename())
-            );
+            // 支持代理缓存模式，无须重复写入
+            if (!$aopConfig->isCacheable() || !file_exists($proxyFile)) {
+                $proxy->generateProxyFile($file->getContents(), $proxyFile);
+            }
             // 代理类将源代码生成代理后代码(在生成代理代码的过程中，源文件相关信息会被存储在访客节点类中)
             $this->classMap[$classVisitor->getClass()] = $proxyFile;
             // 判断当前扫描结果，如果是Aspect注解，那就进行注册
