@@ -10,21 +10,22 @@ class AopConfig
     private static AopConfig $instance;
 
     private function __construct(
-        private array $scanDirs,
-        private string $storagePath,
-        private bool $cacheable,
+        private array $scanDirs = [],
+        private string $storageDir = '',
+        private bool $cacheable = false,
+        private array $aspects = [],
     )
     {
         // create storage path dir when not exist.
-        !is_dir($this->storagePath) && mkdir($this->storagePath);
+        !is_dir($this->storageDir) && mkdir($this->storageDir);
     }
 
     /**
      * Get single instance.
-     * @param array|null $config
+     * @param array $config
      * @return static
      */
-    public static function instance(?array $config=null): self
+    public static function instance(array $config=[]): self
     {
         if(!isset(self::$instance)){
             self::$instance = new self(...array_values($config));
@@ -44,9 +45,9 @@ class AopConfig
     /**
      * @return string
      */
-    public function getStoragePath(): string
+    public function getStorageDir(): string
     {
-        return $this->storagePath;
+        return $this->storageDir;
     }
 
     /**
@@ -55,5 +56,13 @@ class AopConfig
     public function isCacheable(): bool
     {
         return $this->cacheable;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAspects(): array
+    {
+        return $this->aspects;
     }
 }

@@ -4,6 +4,7 @@ return [
     'scan_dirs' => [
         app_path(),
     ],
-    'storage_path' => sys_get_temp_dir(),
+    'storage_dir' => sys_get_temp_dir(),
     'cacheable' => false,
+    'aspects' => [],
 ];

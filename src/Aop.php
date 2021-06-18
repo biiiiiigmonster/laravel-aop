@@ -15,11 +15,11 @@ class Aop
 
     /**
      * Register aspect class.
-     * @param string $aspectClass
+     * @param string|array $aspectClass
      */
-    public static function register(string $aspectClass): void
+    public static function register(string|array $aspectClass): void
     {
-        self::$aspects[] = $aspectClass;
+        self::$aspects = array_merge(self::$aspects, (array)$aspectClass);
     }
 
     /**

@@ -23,7 +23,11 @@ class AopClassLoader
     )
     {
         $aopConfig = AopConfig::instance($config);
-        if (!empty($aopConfig->getScanDirs())) {
+        // 支持代理缓存模式，无须重复扫描
+        if ($aopConfig->isCacheable()) {
+            // 代理缓存模式中，Aop aspects 直接从配置中获取，而非扫描注册
+            Aop::register($aopConfig->getAspects());
+        } elseif (!empty($aopConfig->getScanDirs())) {
             $this->scan();
         }
     }
@@ -51,32 +55,37 @@ class AopClassLoader
     }
 
     /**
+     * Create Finder.
+     *
+     * @param string|string[] $dirs
+     * @return Finder
+     */
+    public static function finder(string|array $dirs): Finder
+    {
+        return Finder::create()
+            ->in($dirs)
+            ->files()
+            ->filter(fn(SplFileInfo $file) => !str_starts_with($file->getRealPath(), dirname(__DIR__)))
+            ->name('*.php');
+    }
+
+    /**
      * Scan file.
      */
     public function scan(): void
     {
         $aopConfig = AopConfig::instance();
 
-        $files = Finder::create()
-            ->in($aopConfig->getScanDirs())
-            ->files()
-            ->filter(fn(SplFileInfo $file) => !str_starts_with($file->getRealPath(), dirname(__DIR__)))
-            ->name('*.php');
+        $finder = self::finder($aopConfig->getScanDirs());
 
-        foreach ($files as $file) {
-            $proxyFile = sprintf(
-                '%s' . DIRECTORY_SEPARATOR . '%s',
-                $aopConfig->getStoragePath(),
-                $file->getFilename(),
-            );
+        foreach ($finder as $file) {
             // 实例化代理
-            $proxy = new Proxy([$classVisitor = new ClassVisitor(), new MethodVisitor()]);
-            // 支持代理缓存模式，无须重复写入
-            if (!$aopConfig->isCacheable() || !file_exists($proxyFile)) {
-                $proxy->generateProxyFile($file->getContents(), $proxyFile);
-            }
-            // 代理类将源代码生成代理后代码(在生成代理代码的过程中，源文件相关信息会被存储在访客节点类中)
-            $this->classMap[$classVisitor->getClass()] = $proxyFile;
+            $proxy = new Proxy($file, [$classVisitor = new ClassVisitor(), new MethodVisitor()]);
+            // 代理文件预设路径
+            $proxyFilepath = $proxy->proxyFilepath($aopConfig->getStorageDir());
+            // 生成代理文件(在生成代理文件的过程中，源代码相关信息会被存储在访客节点类中)
+            $proxy->generateProxyFile($proxyFilepath);
+            $this->classMap[$classVisitor->getClass()] = $proxyFilepath;
             // 判断当前扫描结果，如果是Aspect注解，那就进行注册
             if ($classVisitor->isAspect()) {
                 Aop::register($classVisitor->getClass());
