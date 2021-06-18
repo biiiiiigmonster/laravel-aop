@@ -82,12 +82,12 @@ class AopClassLoader
         $finder = self::finder($aopConfig->getScanDirs());
 
         foreach ($finder as $file) {
-            // 实例化代理
+            // 实例化代理(在初始化时生成代理代码的过程中，源代码相关信息会被存储在访客节点类中)
             $proxy = new Proxy($file, [$classVisitor = new ClassVisitor(), new MethodVisitor()]);
             // 代理文件预设路径
             $proxyFilepath = $proxy->proxyFilepath($aopConfig->getStorageDir());
-            // 生成代理文件(在生成代理文件的过程中，源代码相关信息会被存储在访客节点类中)
-            if($proxy->generateProxyFile($proxyFilepath)){
+            // 生成代理文件
+            if ($proxy->generateProxyFile($proxyFilepath)) {
                 $this->classMap[$classVisitor->getClass()] = $proxyFilepath;
             }
             // 判断当前扫描结果，如果是Aspect注解，那就进行注册
@@ -97,11 +97,18 @@ class AopClassLoader
         }
     }
 
+    public function lazyLoad($class): void
+    {
+
+    }
+
     /**
      * @param string $class
      */
     public function loadClass(string $class): void
     {
+        $this->lazyLoad($class);
+
         if ($file = $this->findFile($class)) {
 
             include $file;
