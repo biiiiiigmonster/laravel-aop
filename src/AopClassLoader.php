@@ -31,9 +31,11 @@ class AopClassLoader
     )
     {
         $aopConfig = AopConfig::instance($config);
-        // 懒加载，Aop aspects 直接从配置中获取，而非扫描注册
-        Aop::register($aopConfig->getAspects());
-        $this->scan();
+        if (!empty($aopConfig->getScanDirs())) {
+            // 懒加载，Aop aspects 直接从配置中获取，而非扫描注册
+            Aop::register($aopConfig->getAspects());
+            $this->scan();
+        }
     }
 
     /**
@@ -97,7 +99,7 @@ class AopClassLoader
         // 实例化代理(在初始化时生成代理代码的过程中，源代码相关信息会被存储在访客节点类中)
         $proxy = new Proxy($fileInfo, [$classVisitor = new ClassVisitor(), new MethodVisitor()]);
         // 无须代理文件，直接返回
-        if($classVisitor->isInterface()){
+        if ($classVisitor->isInterface()) {
             return $file;
         }
 
