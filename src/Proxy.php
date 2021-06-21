@@ -7,7 +7,7 @@ use PhpParser\NodeVisitor;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter;
-use Symfony\Component\Finder\SplFileInfo;
+use SplFileInfo;
 
 class Proxy
 {
@@ -34,24 +34,14 @@ class Proxy
     }
 
     /**
-     * Add visitor.
-     *
-     * @param NodeVisitor $visitor
-     */
-    public function addVisitor(NodeVisitor $visitor): void
-    {
-        $this->visitors[] = $visitor;
-    }
-
-    /**
      * Generate proxy code.
      *
      * @return string
      */
-    public function generateProxyCode(): string
+    private function generateProxyCode(): string
     {
         // 将源代码解析成AST
-        $ast = $this->parser->parse($this->file->getContents());
+        $ast = $this->parser->parse(file_get_contents($this->file->getPathname()));
         // 向遍历器添加节点访问器
         foreach ($this->visitors as $visitor) {
             $this->traverser->addVisitor($visitor);
@@ -65,14 +55,13 @@ class Proxy
     /**
      * Proxy file path.
      *
-     * @param string $storageDir
      * @return string
      */
-    public function proxyFilepath(string $storageDir): string
+    private function proxyFilepath(): string
     {
         return sprintf(
             '%s' . DIRECTORY_SEPARATOR . '%s',
-            $storageDir,
+            AopConfig::instance()->getStorageDir(),
             $this->file->getFilename(),
         );
     }
@@ -80,11 +69,15 @@ class Proxy
     /**
      * Generate proxy file.
      *
-     * @param string $proxyFile
-     * @return bool
+     * @return string Return proxy file pathname.
      */
-    public function generateProxyFile(string $proxyFile): bool
+    public function generateProxyFile(): string
     {
-        return file_put_contents($proxyFile, $this->generateProxyCode()) !== false;
+        $proxyFile = $this->proxyFilepath();
+        $temPath = $proxyFile . '.' . uniqid();
+        file_put_contents($temPath, $this->generateProxyCode());
+        // todo: if file put fail, throw exception.
+        rename($temPath, $proxyFile);
+        return $proxyFile;
     }
 }

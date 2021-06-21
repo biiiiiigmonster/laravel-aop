@@ -36,6 +36,7 @@ class MethodVisitor extends NodeVisitorAbstract
                 $node->isStatic()
                 || $node->isMagic()
                 || $node->isPrivate()
+                || $node->isAbstract()
             ) {
                 return $node;
             }

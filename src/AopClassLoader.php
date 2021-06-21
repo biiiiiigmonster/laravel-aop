@@ -6,7 +6,7 @@ use BiiiiiigMonster\Aop\Visitors\ClassVisitor;
 use BiiiiiigMonster\Aop\Visitors\MethodVisitor;
 use Composer\Autoload\ClassLoader as ComposerClassLoader;
 use Symfony\Component\Finder\Finder;
-use Symfony\Component\Finder\SplFileInfo;
+use SplFileInfo;
 
 class AopClassLoader
 {
@@ -14,6 +14,11 @@ class AopClassLoader
      * @var string[]
      */
     private array $classMap = [];
+
+    /**
+     * @var string[]
+     */
+    private array $lazyMap = [];
 
     /**
      * AopClassLoader constructor.
@@ -26,13 +31,9 @@ class AopClassLoader
     )
     {
         $aopConfig = AopConfig::instance($config);
-        // 支持代理缓存模式，无须重复扫描
-        if ($aopConfig->isCacheable()) {
-            // 代理缓存模式中，Aop aspects 直接从配置中获取，而非扫描注册
-            Aop::register($aopConfig->getAspects());
-        } elseif (!empty($aopConfig->getScanDirs())) {
-            $this->scan();
-        }
+        // 懒加载，Aop aspects 直接从配置中获取，而非扫描注册
+        Aop::register($aopConfig->getAspects());
+        $this->scan();
     }
 
     /**
@@ -60,13 +61,12 @@ class AopClassLoader
     /**
      * Create Finder.
      *
-     * @param string|string[] $dirs
      * @return Finder
      */
-    public static function finder(string|array $dirs): Finder
+    private function finder(): Finder
     {
         return Finder::create()
-            ->in($dirs)
+            ->in(AopConfig::instance()->getScanDirs())
             ->files()
             ->filter(fn(SplFileInfo $file) => !str_starts_with($file->getRealPath(), dirname(__DIR__)))
             ->name('*.php');
@@ -77,36 +77,33 @@ class AopClassLoader
      */
     public function scan(): void
     {
-        $aopConfig = AopConfig::instance();
-
-        $finder = self::finder($aopConfig->getScanDirs());
-
-        foreach ($finder as $file) {
-            // 实例化代理(在初始化时生成代理代码的过程中，源代码相关信息会被存储在访客节点类中)
-            $proxy = new Proxy($file, [$classVisitor = new ClassVisitor(), new MethodVisitor()]);
-            // 代理文件预设路径
-            $proxyFilepath = $proxy->proxyFilepath($aopConfig->getStorageDir());
-            // 生成代理文件
-            if ($proxy->generateProxyFile($proxyFilepath)) {
-                $this->classMap[$classVisitor->getClass()] = $proxyFilepath;
-            }
-            // 判断当前扫描结果，如果是Aspect注解，那就进行注册
-            if ($classVisitor->isAspect()) {
-                Aop::register($classVisitor->getClass());
-            }
+        foreach ($this->finder() as $file) {
+            $this->lazyMap[$file->getRealPath()] = 1;
         }
     }
 
     /**
      * Lazy load class file.
-     * @param $class
+     * @param $file
      * @return string
      */
-    public function lazyLoad($class): string
+    private function lazyLoad($file): string
     {
-        $file = $this->composerLoader->findFile($class);
+        $fileInfo = new SplFileInfo($file);
+        if (!isset($this->lazyMap[$fileInfo->getRealPath()])) {
+            return $file;
+        }
 
-        return $file;
+        // 实例化代理(在初始化时生成代理代码的过程中，源代码相关信息会被存储在访客节点类中)
+        $proxy = new Proxy($fileInfo, [$classVisitor = new ClassVisitor(), new MethodVisitor()]);
+        // 获取代理文件路径名
+        $proxyFile = $proxy->generateProxyFile();
+        $this->classMap[$classVisitor->getClass()] = $proxyFile;
+        // 判断当前扫描结果，如果是Aspect注解，那就进行注册
+//        if ($classVisitor->isAspect()) {
+//            Aop::register($classVisitor->getClass());
+//        }
+        return $proxyFile;
     }
 
     /**
@@ -114,8 +111,6 @@ class AopClassLoader
      */
     public function loadClass(string $class): void
     {
-        $this->lazyLoad($class);
-
         if ($file = $this->findFile($class)) {
 
             include $file;
@@ -126,8 +121,8 @@ class AopClassLoader
      * @param string $class
      * @return string
      */
-    public function findFile(string $class): string
+    private function findFile(string $class): string
     {
-        return $this->classMap[$class] ?? $this->lazyLoad($class);
+        return $this->classMap[$class] ?? $this->lazyLoad($this->composerLoader->findFile($class));
     }
 }
