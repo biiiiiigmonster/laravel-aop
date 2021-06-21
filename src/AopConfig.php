@@ -16,8 +16,6 @@ class AopConfig
         private array $aspects = [],
     )
     {
-        // create storage path dir when not exist.
-        !is_dir($this->storageDir) && mkdir($this->storageDir);
     }
 
     /**

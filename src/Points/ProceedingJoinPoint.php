@@ -101,7 +101,9 @@ class ProceedingJoinPoint extends JoinPoint
         $argsMap = [];
         foreach ($reflectionMethod->getParameters() as $parameter) {
             if (!$parameter->isVariadic()) {
-                $argsMap[$parameter->getName()] = array_shift($func_get_args) ?? $parameter->getDefaultValue();
+                $tem = $func_get_args;
+                $value = array_shift($func_get_args);
+                $argsMap[$parameter->getName()] = $tem===$func_get_args ? $parameter->getDefaultValue() : $value;
             } else {
                 $remainder = $func_get_args;
                 foreach ($variadic_args as $named => $value) {

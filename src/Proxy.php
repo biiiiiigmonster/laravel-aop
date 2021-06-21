@@ -61,9 +61,13 @@ class Proxy
      */
     private function proxyFilepath(): string
     {
+        $relativePath = array_reverse(explode(base_path(), $this->file->getPath(), 2))[0];
+        $dir = AopConfig::instance()->getStorageDir() . $relativePath;
+        // create storage path dir when not exist.
+        !is_dir($dir) && mkdir($dir, 0755, true);
         return sprintf(
             '%s' . DIRECTORY_SEPARATOR . '%s',
-            AopConfig::instance()->getStorageDir(),
+            $dir,
             $this->file->getFilename(),
         );
     }
@@ -76,10 +80,12 @@ class Proxy
     public function generateProxyFile(): string
     {
         $proxyFile = $this->proxyFilepath();
-        $temPath = $proxyFile . '.' . uniqid();
-        file_put_contents($temPath, $this->proxyCode);
-        // todo: if file put fail, throw exception.
-        rename($temPath, $proxyFile);
+        if (!file_exists($proxyFile)) {
+            $temPath = $proxyFile . '.' . uniqid();
+            file_put_contents($temPath, $this->proxyCode);
+            // todo: if file put fail, throw exception.
+            rename($temPath, $proxyFile);
+        }
         return $proxyFile;
     }
 }
