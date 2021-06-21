@@ -68,7 +68,7 @@ class MethodVisitor extends NodeVisitorAbstract
             }
         }
 
-        $stmts = $this->methodAssign($node, $variadicArgs);
+        $stmts = $this->methodAssign($node);
 
         $staticCall = new StaticCall(new Name('self'), '__proxyCall', [
             // __CLASS__
@@ -94,10 +94,9 @@ class MethodVisitor extends NodeVisitorAbstract
 
     /**
      * @param ClassMethod $node
-     * @param Variable|null $variadicArgs
      * @return Expression[]
      */
-    private function methodAssign(ClassMethod $node, ?Variable $variadicArgs = null): array
+    private function methodAssign(ClassMethod $node): array
     {
         /** @var ?array $closureUses */
         $closureUses = null;

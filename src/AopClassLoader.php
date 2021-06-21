@@ -96,14 +96,17 @@ class AopClassLoader
 
         // 实例化代理(在初始化时生成代理代码的过程中，源代码相关信息会被存储在访客节点类中)
         $proxy = new Proxy($fileInfo, [$classVisitor = new ClassVisitor(), new MethodVisitor()]);
+        // 无须代理文件，直接返回
+        if($classVisitor->isInterface()){
+            return $file;
+        }
+
         // 获取代理文件路径名
-        $proxyFile = $proxy->generateProxyFile();
-        $this->classMap[$classVisitor->getClass()] = $proxyFile;
+        return $this->classMap[$classVisitor->getClass()] = $proxy->generateProxyFile();
         // 判断当前扫描结果，如果是Aspect注解，那就进行注册
 //        if ($classVisitor->isAspect()) {
 //            Aop::register($classVisitor->getClass());
 //        }
-        return $proxyFile;
     }
 
     /**

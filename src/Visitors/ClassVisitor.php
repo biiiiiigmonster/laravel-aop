@@ -41,11 +41,25 @@ class ClassVisitor extends NodeVisitorAbstract
     private array $attributes = [];
 
     /**
+     * Class is interface.
+     * @var bool
+     */
+    private bool $interface = false;
+
+    /**
      * @return string
      */
     public function getClass(): string
     {
         return sprintf('%s\\%s', $this->namespace, $this->className);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isInterface(): bool
+    {
+        return $this->interface;
     }
 
     /**
@@ -84,6 +98,8 @@ class ClassVisitor extends NodeVisitorAbstract
             $this->namespace = $node->name->toString();
         } elseif ($node instanceof Node\Stmt\Class_) {
             $this->className = $node->name->toString();
+        } elseif ($node instanceof Node\Stmt\Interface_) {
+            $this->interface = true;
         }
         return $node;
     }

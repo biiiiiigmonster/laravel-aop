@@ -17,6 +17,7 @@ class Proxy
     private PrettyPrinter\Standard $printer;
     /** @var NodeVisitor[] $visitors */
     private array $visitors;
+    private string $proxyCode;
 
     /**
      * Proxy constructor.
@@ -31,6 +32,7 @@ class Proxy
         $this->traverser = new NodeTraverser();
         $this->printer = new PrettyPrinter\Standard();
         $this->visitors = $visitors;
+        $this->proxyCode = $this->generateProxyCode();
     }
 
     /**
@@ -75,7 +77,7 @@ class Proxy
     {
         $proxyFile = $this->proxyFilepath();
         $temPath = $proxyFile . '.' . uniqid();
-        file_put_contents($temPath, $this->generateProxyCode());
+        file_put_contents($temPath, $this->proxyCode);
         // todo: if file put fail, throw exception.
         rename($temPath, $proxyFile);
         return $proxyFile;
