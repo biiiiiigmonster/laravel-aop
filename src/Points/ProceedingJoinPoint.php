@@ -195,7 +195,7 @@ class ProceedingJoinPoint extends JoinPoint
      * @param array|null $param
      * @return mixed
      * @throws \ReflectionException
-     * @throws Throwable
+     * @throws \Throwable
      */
     public function process(?array $param = null): mixed
     {

@@ -39,7 +39,7 @@ class Aop
      * @param string $method
      * @return void
      * @throws \ReflectionException
-     * @throws AopException
+     * @throws \BiiiiiigMonster\Aop\Exceptions\AopException
      */
     public static function parse(string $className, string $method): void
     {
@@ -93,7 +93,7 @@ class Aop
      * @param string $method
      * @return array
      * @throws \ReflectionException
-     * @throws AopException
+     * @throws \BiiiiiigMonster\Aop\Exceptions\AopException
      */
     public static function getAspectMapping(string $className, string $method): array
     {
