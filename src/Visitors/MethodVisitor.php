@@ -110,14 +110,6 @@ class MethodVisitor extends NodeVisitorAbstract
             $closureUses[] = new Variable('__method__');
             $this->magicConstMethod = null;
         }
-//        $params = [];
-//        foreach ($node->getParams() as $param) {
-//            if ($param->byRef) {
-//                $closureUses[] = new Node\Expr\ClosureUse(new Variable($param->var->name), true);
-//            } else {
-//                $params[] = $param;
-//            }
-//        }
         // Create Original Target
         $target = new Expression(new Assign(new Variable('__target__'), new Closure([
             'params' => $node->getParams(),
