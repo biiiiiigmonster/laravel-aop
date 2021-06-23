@@ -11,7 +11,9 @@ class Aop
 {
     private static array $aspects = [];
 
-    private static array $mapping = [];
+    private static array $aspectMapping = [];
+
+    private static array $attributeMapping = [];
 
     /**
      * Register aspect class.
@@ -35,10 +37,10 @@ class Aop
      * Parse the class & method aspect instance.
      * @param string $className
      * @param string $method
-     * @return array
+     * @return void
      * @throws ReflectionException
      */
-    public static function parse(string $className, string $method): array
+    public static function parse(string $className, string $method): void
     {
         $rfcClass = new ReflectionClass($className);
         $rfcClassAttributes = $rfcClass->getAttributes();
@@ -74,12 +76,11 @@ class Aop
             }
         }
 
-        $aspectInstances = [];
         while (!$queue->isEmpty()) {
-            $aspectInstances[] = $queue->extract();
+            [$aspectInstances, $attributeInstances] = $queue->extract();
+            self::$aspectMapping[$className][$method][] = $aspectInstances;
+            self::$attributeMapping[$className][$method][$aspectInstances::class] = $attributeInstances;
         }
-
-        return self::$mapping[$className][$method] = $aspectInstances;
     }
 
     /**
@@ -89,9 +90,25 @@ class Aop
      * @return array
      * @throws ReflectionException
      */
-    public static function get(string $className, string $method): array
+    public static function getAspectMapping(string $className, string $method): array
     {
-        return self::$mapping[$className][$method] ?? self::parse($className, $method);
+        if(!isset(self::$aspectMapping[$className][$method])){
+            self::parse($className, $method);
+        }
+
+        return self::$aspectMapping[$className][$method];
+    }
+
+    /**
+     * Get the method attribute by aspect class.
+     * @param string $className
+     * @param string $method
+     * @param string $aspectClass
+     * @return object|null
+     */
+    public static function getAttributeMapping(string $className, string $method, string $aspectClass): ?object
+    {
+        return self::$attributeMapping[$className][$method][$aspectClass] ?? null;
     }
 
     /**

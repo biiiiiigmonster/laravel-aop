@@ -15,12 +15,11 @@ trait AopTrait
     {
         $target = fn(JoinPoint $joinPoint) => $joinPoint->invokeTarget();
 
-        $through = fn(Closure $pipeline, array $pipe) => function (JoinPoint $joinPoint) use ($pipeline, $pipe) {
-            $aspectHandler = new AspectHandler();
-            $joinPoint->through($pipe);
-            $joinPoint->setPipeline($pipeline);
-            return $aspectHandler($joinPoint);
-        };
+        $through =
+            fn(Closure $pipeline, object $pipe) =>
+            fn(JoinPoint $joinPoint) =>
+//            $joinPoint->setAspectHandler(new AspectHandler($pipe))->setPipeline($pipeline)->process()
+            (new AspectHandler)($joinPoint->setPipeline($pipeline)->setAspect($pipe));
 
         return array_reduce($pipes, $through, $target);
     }

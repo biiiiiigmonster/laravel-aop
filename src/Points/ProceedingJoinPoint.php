@@ -2,6 +2,7 @@
 
 namespace BiiiiiigMonster\Aop\Points;
 
+use BiiiiiigMonster\Aop\Aop;
 use BiiiiiigMonster\Aop\AspectHandler;
 use BiiiiiigMonster\Aop\Concerns\JoinPoint;
 use Closure;
@@ -9,10 +10,12 @@ use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionUnionType;
+use Throwable;
 
 class ProceedingJoinPoint extends JoinPoint
 {
     private array $argsMap;
+    private ?array $param = null;
 
     /**
      * JoinPoint constructor.
@@ -64,6 +67,22 @@ class ProceedingJoinPoint extends JoinPoint
     }
 
     /**
+     * @return array|null
+     */
+    public function getParam(): ?array
+    {
+        return $this->param;
+    }
+
+    /**
+     * @param array|null $param
+     */
+    protected function setParam(?array $param): void
+    {
+        $this->param = $param;
+    }
+
+    /**
      * Parse the return types by the "ReflectionMethod".
      * @param ReflectionMethod $reflectionMethod
      * @return array
@@ -103,7 +122,7 @@ class ProceedingJoinPoint extends JoinPoint
             if (!$parameter->isVariadic()) {
                 $tem = $func_get_args;
                 $value = array_shift($func_get_args);
-                $argsMap[$parameter->getName()] = $tem===$func_get_args ? $parameter->getDefaultValue() : $value;
+                $argsMap[$parameter->getName()] = $tem === $func_get_args ? $parameter->getDefaultValue() : $value;
             } else {
                 $remainder = $func_get_args;
                 foreach ($variadic_args as $named => $value) {
@@ -135,6 +154,14 @@ class ProceedingJoinPoint extends JoinPoint
     }
 
     /**
+     * @return object|null
+     */
+    public function getAttributeInstance(): ?object
+    {
+        return Aop::getAttributeMapping($this->className, $this->method, $this->aspect::class);
+    }
+
+    /**
      * Get the original parameter contains func_get_args() & variadic named arguments.
      * @return array
      */
@@ -158,23 +185,62 @@ class ProceedingJoinPoint extends JoinPoint
     {
         // call target.
         $target = $this->target;
-        $args = $this->getOriginalArguments();
+        $args = $this->getParam() ?? $this->getOriginalArguments();
 
         return $target(...$args);
     }
 
     /**
      * Process the original method, this method should trigger by pipeline.
+     *
+     * @param array|null $param
      * @return mixed
      * @throws ReflectionException
+     * @throws Throwable
      */
-    public function process(): mixed
+    public function process(?array $param = null): mixed
     {
-        [$before] = AspectHandler::getAspectAdvices($this->curAspectInstance::class);
-        // Execute "Before"
-        if ($before) $before->invoke($this->curAspectInstance, $this);
+        $this->setParam($param);
 
-        $closure = $this->pipeline;
-        return $closure($this);
+        $aspectInstance = $this->getAspect();
+        if ($aspectInstance) {
+            [$before, , $after, $afterThrowing, $afterReturning] = AspectHandler::getAspectAdvices($aspectInstance::class);
+        }
+        // Execute "Before"
+        if (isset($before)) {
+            $before->invoke($aspectInstance, $this);
+        }
+
+        try {
+            // Execute the next pipeline.
+            $closure = $this->pipeline;
+            $this->setReturn($closure($this));
+            // Execute "AfterReturning"
+            if (isset($afterReturning)) {
+                $this->setReturn(
+                    $afterReturning->invoke($aspectInstance, $this->setAspect($aspectInstance))// The next pipeline will change the cur aspect, execute complete reset it.
+                );
+            }
+        } catch (Throwable $throwable) {
+            // Set "Throwable"
+            $this->setThrowable($throwable);
+        } finally {
+            // Execute "After"
+            if (isset($after)) {
+                $after->invoke($aspectInstance, $this->setAspect($aspectInstance));
+            }
+        }
+
+        //  Execute "AfterThrowing" if target has throwable
+        if ($this->getThrowable()) {
+            // Execute "AfterThrowing"
+            if (isset($afterThrowing)) {
+                $afterThrowing->invoke($aspectInstance, $this->getThrowable());
+            } else {
+                throw $this->getThrowable();
+            }
+        }
+
+        return $this->getReturn();
     }
 }

@@ -2,18 +2,18 @@
 
 namespace BiiiiiigMonster\Aop\Concerns;
 
+use BiiiiiigMonster\Aop\Aop;
 use Closure;
 use Throwable;
 
 abstract class JoinPoint
 {
-    protected Closure $pipeline;// pipeline is a wrapped target with closure, pipeline's kernel is the target!
     protected mixed $target;// When ProceedingJoinPoint, it's a closure; When ParameterJoinPoint, it's a value;
     protected mixed $return;
     protected array $returnTypes;
     protected ?Throwable $throwable = null;
-    protected object $curAspectInstance;// current Aspect Instance
-    protected ?object $curAttributeInstance = null;// current Attribute Instance
+    protected ?Closure $pipeline = null;// pipeline is a wrapped target with closure, pipeline's kernel is the target!
+    protected ?object $aspect = null;
 
     /**
      * @return mixed
@@ -25,10 +25,13 @@ abstract class JoinPoint
 
     /**
      * @param mixed $return
+     * @return JoinPoint
      */
-    public function setReturn(mixed $return): void
+    protected function setReturn(mixed $return): static
     {
         $this->return = $return;
+
+        return $this;
     }
 
     /**
@@ -49,44 +52,47 @@ abstract class JoinPoint
 
     /**
      * @param Throwable|null $throwable
+     * @return JoinPoint
      */
-    public function setThrowable(?Throwable $throwable): void
+    protected function setThrowable(?Throwable $throwable): static
     {
         $this->throwable = $throwable;
+
+        return $this;
     }
 
     /**
-     * @return object
+     * Get the joinPoint attribute instance.
+     * @return object|null
      */
-    public function getCurAspectInstance(): object
-    {
-        return $this->curAspectInstance;
-    }
+    abstract public function getAttributeInstance(): ?object;
 
     /**
      * @return object|null
      */
-    public function getCurAttributeInstance(): ?object
+    public function getAspect(): ?object
     {
-        return $this->curAttributeInstance;
+        return $this->aspect;
+    }
+
+    /**
+     * @param object|null $aspect
+     * @return JoinPoint
+     */
+    protected function setAspect(?object $aspect): static
+    {
+        $this->aspect = $aspect;
+
+        return $this;
     }
 
     /**
      * @param Closure $pipeline
-     */
-    public function setPipeline(Closure $pipeline): void
-    {
-        $this->pipeline = $pipeline;
-    }
-
-    /**
-     * @param array $pipe [AspectInstance, ?AttributeInstance]
      * @return JoinPoint
      */
-    public function through(array $pipe): static
+    public function setPipeline(Closure $pipeline): static
     {
-        $this->curAspectInstance = $pipe[0];
-        $this->curAttributeInstance = $pipe[1] ?? null;
+        $this->pipeline = $pipeline;
 
         return $this;
     }
@@ -99,7 +105,9 @@ abstract class JoinPoint
 
     /**
      * This method should trigger by pipeline.
+     *
+     * @param array|null $param Override the original arguments, if give.
      * @return mixed
      */
-    abstract public function process(): mixed;
+    abstract public function process(?array $param = null): mixed;
 }

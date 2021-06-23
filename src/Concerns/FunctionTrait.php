@@ -24,7 +24,7 @@ trait FunctionTrait
      */
     public static function __proxyCall(string $className, string $method, array $arguments, array $variadicArguments, Closure $target): mixed
     {
-        $pipeline = self::__pipeline(Aop::get($className, $method));
+        $pipeline = self::__pipeline(Aop::getAspectMapping($className, $method));
         $joinPoint = new ProceedingJoinPoint($className, $method, $arguments, $variadicArguments, $target);
 
         return $pipeline($joinPoint);

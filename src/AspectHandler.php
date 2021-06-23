@@ -26,40 +26,14 @@ class AspectHandler
      * @param JoinPoint $joinPoint
      * @return mixed
      * @throws ReflectionException
-     * @throws Throwable
      */
     public function __invoke(JoinPoint $joinPoint): mixed
     {
-        $aspectInstance = $joinPoint->getCurAspectInstance();
-        [$before, $around, $after, $afterThrowing, $afterReturning] = self::getAspectAdvices($aspectInstance::class);
+        $aspectInstance = $joinPoint->getAspect();
+        [, $around] = self::getAspectAdvices($aspectInstance::class);
 
-        try {
-            // Execute "Around"
-            $joinPoint->setReturn(
-                $around ? $around->invoke($aspectInstance, $joinPoint) : $joinPoint->process()
-            );
-        } catch (Throwable $throwable) {
-            // Set "Throwable"
-            $joinPoint->setThrowable($throwable);
-        } finally {
-            // Execute "After"
-            if ($after) $after->invoke($aspectInstance, $joinPoint);
-        }
-
-        //  Execute "AfterThrowing" if target has throwable
-        if ($joinPoint->getThrowable()) {
-            // Execute "AfterThrowing"
-            if ($afterThrowing) {
-                $joinPoint->setReturn($afterThrowing->invoke($aspectInstance, $joinPoint->getThrowable(), $joinPoint));
-            } else {
-                throw $joinPoint->getThrowable();
-            }
-        } else {
-            // Execute "AfterReturning"
-            if ($afterReturning) $joinPoint->setReturn($afterReturning->invoke($aspectInstance, $joinPoint));
-        }
-
-        return $joinPoint->getReturn();
+        // Execute "Around"
+        return $around ? $around->invoke($aspectInstance, $joinPoint) : $joinPoint->process();
     }
 
     /**
