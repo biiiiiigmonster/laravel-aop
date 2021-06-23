@@ -9,7 +9,6 @@ use BiiiiiigMonster\Aop\Attributes\Around;
 use BiiiiiigMonster\Aop\Attributes\Before;
 use BiiiiiigMonster\Aop\Concerns\JoinPoint;
 use ReflectionClass;
-use ReflectionException;
 use ReflectionMethod;
 
 class AspectHandler
@@ -23,7 +22,7 @@ class AspectHandler
     /**
      * @param JoinPoint $joinPoint
      * @return mixed
-     * @throws ReflectionException
+     * @throws \ReflectionException
      */
     public function __invoke(JoinPoint $joinPoint): mixed
     {
@@ -37,7 +36,7 @@ class AspectHandler
     /**
      * @param string $aspectClassName
      * @return ReflectionMethod[]
-     * @throws ReflectionException
+     * @throws \ReflectionException
      */
     public static function getAspectAdvices(string $aspectClassName): array
     {

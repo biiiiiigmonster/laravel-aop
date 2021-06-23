@@ -6,7 +6,6 @@ use BiiiiiigMonster\Aop\Aop;
 use BiiiiiigMonster\Aop\AspectHandler;
 use BiiiiiigMonster\Aop\Concerns\JoinPoint;
 use Closure;
-use ReflectionException;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionUnionType;
@@ -25,7 +24,7 @@ class ProceedingJoinPoint extends JoinPoint
      * @param array $arguments
      * @param array $variadicArguments
      * @param Closure $target
-     * @throws ReflectionException
+     * @throws \ReflectionException
      */
     public function __construct(
         private string $className,
@@ -111,7 +110,7 @@ class ProceedingJoinPoint extends JoinPoint
      * Parse the arguments map by the "ReflectionMethod".
      * @param ReflectionMethod $reflectionMethod
      * @return array
-     * @throws ReflectionException
+     * @throws \ReflectionException
      */
     protected function parseArgsMap(ReflectionMethod $reflectionMethod): array
     {
@@ -195,7 +194,7 @@ class ProceedingJoinPoint extends JoinPoint
      *
      * @param array|null $param
      * @return mixed
-     * @throws ReflectionException
+     * @throws \ReflectionException
      * @throws Throwable
      */
     public function process(?array $param = null): mixed

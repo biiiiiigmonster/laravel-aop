@@ -5,7 +5,6 @@ namespace BiiiiiigMonster\Aop;
 use BiiiiiigMonster\Aop\Attributes\Aspect;
 use BiiiiiigMonster\Aop\Exceptions\AopException;
 use ReflectionClass;
-use ReflectionException;
 use SplPriorityQueue;
 
 class Aop
@@ -39,7 +38,7 @@ class Aop
      * @param string $className
      * @param string $method
      * @return void
-     * @throws ReflectionException
+     * @throws \ReflectionException
      * @throws AopException
      */
     public static function parse(string $className, string $method): void
@@ -93,7 +92,7 @@ class Aop
      * @param string $className
      * @param string $method
      * @return array
-     * @throws ReflectionException
+     * @throws \ReflectionException
      * @throws AopException
      */
     public static function getAspectMapping(string $className, string $method): array
