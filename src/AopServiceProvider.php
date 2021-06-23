@@ -2,7 +2,6 @@
 
 namespace BiiiiiigMonster\Aop;
 
-use BiiiiiigMonster\Aop\Console\ClearCommand;
 use Illuminate\Support\ServiceProvider;
 
 class AopServiceProvider extends ServiceProvider

@@ -3,6 +3,7 @@
 namespace BiiiiiigMonster\Aop\Concerns;
 
 use BiiiiiigMonster\Aop\Aop;
+use BiiiiiigMonster\Aop\Exceptions\AopException;
 use BiiiiiigMonster\Aop\Points\ProceedingJoinPoint;
 use Closure;
 use ReflectionException;
@@ -21,6 +22,7 @@ trait FunctionTrait
      * @param Closure $target
      * @return mixed
      * @throws ReflectionException
+     * @throws AopException
      */
     public static function __proxyCall(string $className, string $method, array $arguments, array $variadicArguments, Closure $target): mixed
     {

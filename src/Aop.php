@@ -3,6 +3,7 @@
 namespace BiiiiiigMonster\Aop;
 
 use BiiiiiigMonster\Aop\Attributes\Aspect;
+use BiiiiiigMonster\Aop\Exceptions\AopException;
 use ReflectionClass;
 use ReflectionException;
 use SplPriorityQueue;
@@ -39,6 +40,7 @@ class Aop
      * @param string $method
      * @return void
      * @throws ReflectionException
+     * @throws AopException
      */
     public static function parse(string $className, string $method): void
     {
@@ -49,6 +51,9 @@ class Aop
 
         foreach (self::getAspects() as $aspect) {
             $aspectClass = new ReflectionClass($aspect);
+            if(empty($aspectClass->getAttributes(Aspect::class))){
+                throw new AopException("$aspect is not a Aspect!");
+            }
             /** @var Aspect $aspectAttribute */
             $aspectAttribute = $aspectClass->getAttributes(Aspect::class)[0]->newInstance();
             foreach ($aspectAttribute->pointcuts as $pointcut) {
@@ -89,6 +94,7 @@ class Aop
      * @param string $method
      * @return array
      * @throws ReflectionException
+     * @throws AopException
      */
     public static function getAspectMapping(string $className, string $method): array
     {
@@ -96,7 +102,7 @@ class Aop
             self::parse($className, $method);
         }
 
-        return self::$aspectMapping[$className][$method];
+        return self::$aspectMapping[$className][$method] ?? [];
     }
 
     /**

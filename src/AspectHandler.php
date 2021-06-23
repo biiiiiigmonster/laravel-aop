@@ -8,11 +8,9 @@ use BiiiiiigMonster\Aop\Attributes\AfterThrowing;
 use BiiiiiigMonster\Aop\Attributes\Around;
 use BiiiiiigMonster\Aop\Attributes\Before;
 use BiiiiiigMonster\Aop\Concerns\JoinPoint;
-use Closure;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
-use Throwable;
 
 class AspectHandler
 {

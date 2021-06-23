@@ -201,46 +201,49 @@ class ProceedingJoinPoint extends JoinPoint
     public function process(?array $param = null): mixed
     {
         $this->setParam($param);
-
         $aspectInstance = $this->getAspect();
         if ($aspectInstance) {
             [$before, , $after, $afterThrowing, $afterReturning] = AspectHandler::getAspectAdvices($aspectInstance::class);
         }
+
         // Execute "Before"
         if (isset($before)) {
             $before->invoke($aspectInstance, $this);
         }
-
+        // Execute the next pipeline.
         try {
-            // Execute the next pipeline.
             $closure = $this->pipeline;
             $this->setReturn($closure($this));
-            // Execute "AfterReturning"
-            if (isset($afterReturning)) {
-                $this->setReturn(
-                    $afterReturning->invoke($aspectInstance, $this->setAspect($aspectInstance))// The next pipeline will change the cur aspect, execute complete reset it.
-                );
-            }
         } catch (Throwable $throwable) {
             // Set "Throwable"
             $this->setThrowable($throwable);
-        } finally {
-            // Execute "After"
-            if (isset($after)) {
-                $after->invoke($aspectInstance, $this->setAspect($aspectInstance));
-            }
         }
+        // The next pipeline will change the cur aspect, so reset it after the pipeline execute complete.
+        $this->setAspect($aspectInstance);
 
-        //  Execute "AfterThrowing" if target has throwable
+        //  Execute "AfterThrowing" if pipeline has throwable
         if ($this->getThrowable()) {
             // Execute "AfterThrowing"
             if (isset($afterThrowing)) {
                 $afterThrowing->invoke($aspectInstance, $this->getThrowable());
-            } else {
-                throw $this->getThrowable();
+            }
+        } else {
+            // Execute "AfterReturning"
+            if (isset($afterReturning)) {
+                $this->setReturn(
+                    $afterReturning->invoke($aspectInstance, $this)
+                );
             }
         }
-
+        // Execute "After"
+        if (isset($after)) {
+            $after->invoke($aspectInstance, $this);
+        }
+        // Throw exception
+        if ($this->getThrowable()) {
+            throw $this->getThrowable();
+        }
+        // Or return.
         return $this->getReturn();
     }
 }

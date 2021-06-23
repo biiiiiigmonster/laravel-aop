@@ -2,7 +2,6 @@
 
 namespace BiiiiiigMonster\Aop\Concerns;
 
-use BiiiiiigMonster\Aop\Aop;
 use Closure;
 use Throwable;
 
@@ -79,7 +78,7 @@ abstract class JoinPoint
      * @param object|null $aspect
      * @return JoinPoint
      */
-    protected function setAspect(?object $aspect): static
+    public function setAspect(?object $aspect): static
     {
         $this->aspect = $aspect;
 
