@@ -26,11 +26,11 @@ class Proxy
      */
     public function __construct(SplFileInfo $file, array $visitors = [])
     {
-        $this->file = $file;
-        // 初始化解析器
         $this->parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
         $this->traverser = new NodeTraverser();
         $this->printer = new PrettyPrinter\Standard();
+
+        $this->file = $file;
         $this->visitors = $visitors;
         $this->proxyCode = $this->generateProxyCode();
     }
@@ -42,15 +42,18 @@ class Proxy
      */
     private function generateProxyCode(): string
     {
-        // 将源代码解析成AST
-        $ast = $this->parser->parse(file_get_contents($this->file->getPathname()));
-        // 向遍历器添加节点访问器
+        $ast = $this->parser->parse(
+            // original code.
+            file_get_contents($this->file->getPathname())
+        );
+
+        // add visitor.
         foreach ($this->visitors as $visitor) {
             $this->traverser->addVisitor($visitor);
         }
-        // 遍历器遍历源代码AST，因为上一步中自定义了节点访问器，因此每一个节点都将被处理
         $nodes = $this->traverser->traverse($ast);
-        // 将遍历器处理后的AST最终输出成代理后代码
+
+        // print proxy code.
         return $this->printer->prettyPrintFile($nodes);
     }
 
@@ -83,7 +86,6 @@ class Proxy
         if (!file_exists($proxyFile) || !AopConfig::instance()->isCacheable()) {
             $temPath = $proxyFile . '.' . uniqid();
             file_put_contents($temPath, $this->proxyCode);
-            // todo: if file put fail, throw exception.
             rename($temPath, $proxyFile);
         }
         return $proxyFile;

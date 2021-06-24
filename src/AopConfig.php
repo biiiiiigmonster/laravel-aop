@@ -10,10 +10,11 @@ class AopConfig
     private static AopConfig $instance;
 
     private function __construct(
-        private array $scanDirs = [],
+        private array $aspects = [],
+        private array $includes = [],
+        private array $excludes = [],
         private bool $cacheable = false,
         private string $storageDir = '',
-        private array $aspects = [],
     )
     {
     }
@@ -35,17 +36,25 @@ class AopConfig
     /**
      * @return array
      */
-    public function getScanDirs(): array
+    public function getAspects(): array
     {
-        return $this->scanDirs;
+        return $this->aspects;
     }
 
     /**
-     * @return string
+     * @return array
      */
-    public function getStorageDir(): string
+    public function getIncludes(): array
     {
-        return $this->storageDir;
+        return $this->includes;
+    }
+
+    /**
+     * @return array
+     */
+    public function getExcludes(): array
+    {
+        return $this->excludes;
     }
 
     /**
@@ -57,10 +66,10 @@ class AopConfig
     }
 
     /**
-     * @return array
+     * @return string
      */
-    public function getAspects(): array
+    public function getStorageDir(): string
     {
-        return $this->aspects;
+        return $this->storageDir;
     }
 }

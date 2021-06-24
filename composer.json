@@ -16,9 +16,8 @@
     },
     "require": {
         "php": "^8.0",
-        "laravel/framework": "^8.0",
-        "symfony/finder": "^5.0",
-        "nikic/php-parser": "^4.10"
+        "nikic/php-parser": "^4.10",
+        "laravel/framework": "^8.0"
     },
     "extra": {
         "laravel": {

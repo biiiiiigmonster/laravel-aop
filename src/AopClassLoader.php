@@ -5,7 +5,6 @@ namespace BiiiiiigMonster\Aop;
 use BiiiiiigMonster\Aop\Visitors\ClassVisitor;
 use BiiiiiigMonster\Aop\Visitors\MethodVisitor;
 use Composer\Autoload\ClassLoader as ComposerClassLoader;
-use Symfony\Component\Finder\Finder;
 use SplFileInfo;
 
 class AopClassLoader
@@ -14,11 +13,6 @@ class AopClassLoader
      * @var string[]
      */
     private array $classMap = [];
-
-    /**
-     * @var string[]
-     */
-    private array $lazyMap = [];
 
     /**
      * AopClassLoader constructor.
@@ -30,12 +24,7 @@ class AopClassLoader
         array $config
     )
     {
-        $aopConfig = AopConfig::instance($config);
-        if (!empty($aopConfig->getScanDirs())) {
-            // 懒加载，Aop aspects 直接从配置中获取，而非扫描注册
-            Aop::register($aopConfig->getAspects());
-            $this->scan();
-        }
+        Aop::register(AopConfig::instance($config)->getAspects());
     }
 
     /**
@@ -61,43 +50,14 @@ class AopClassLoader
     }
 
     /**
-     * Create Finder.
-     *
-     * @return Finder
-     */
-    private function finder(): Finder
-    {
-        return Finder::create()
-            ->in(AopConfig::instance()->getScanDirs())
-            ->files()
-            ->filter(fn(SplFileInfo $file) => !str_starts_with($file->getRealPath(), dirname(__DIR__)))
-            ->name('*.php');
-    }
-
-    /**
-     * Scan file.
-     */
-    public function scan(): void
-    {
-        foreach ($this->finder() as $file) {
-            $this->lazyMap[$file->getRealPath()] = 1;
-        }
-    }
-
-    /**
      * Lazy load class file.
      * @param $file
      * @return string
      */
     private function lazyLoad($file): string
     {
-        $fileInfo = new SplFileInfo($file);
-        if (!isset($this->lazyMap[$fileInfo->getRealPath()])) {
-            return $file;
-        }
-
         // 实例化代理(在初始化时生成代理代码的过程中，源代码相关信息会被存储在访客节点类中)
-        $proxy = new Proxy($fileInfo, [$classVisitor = new ClassVisitor(), new MethodVisitor()]);
+        $proxy = new Proxy(new SplFileInfo($file), [$classVisitor = new ClassVisitor(), new MethodVisitor()]);
         // 无须代理文件，直接返回
         if ($classVisitor->isInterface()) {
             return $file;
@@ -105,10 +65,6 @@ class AopClassLoader
 
         // 获取代理文件路径名
         return $this->classMap[$classVisitor->getClass()] = $proxy->generateProxyFile();
-        // 判断当前扫描结果，如果是Aspect注解，那就进行注册
-//        if ($classVisitor->isAspect()) {
-//            Aop::register($classVisitor->getClass());
-//        }
     }
 
     /**
@@ -128,6 +84,65 @@ class AopClassLoader
      */
     private function findFile(string $class): string
     {
-        return $this->classMap[$class] ?? $this->lazyLoad($this->composerLoader->findFile($class));
+        if (isset($this->classMap[$class])) {
+            return $this->classMap[$class];
+        } else {
+            // find file from composer loader.
+            $file = $this->composerLoader->findFile($class);
+
+            return self::isExclude($class) || !self::isInclude($class) ? $file : $this->lazyLoad($file);
+        }
+    }
+
+    /**
+     * @param string $class
+     * @return bool
+     */
+    private static function isExclude(string $class): bool
+    {
+        $excludes = AopConfig::instance()->getExcludes();
+        foreach ($excludes as $exclude) {
+            if (self::namespaceMatch($exclude, $class)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $class
+     * @return bool
+     */
+    private static function isInclude(string $class): bool
+    {
+        $includes = AopConfig::instance()->getIncludes();
+        foreach ($includes as $include) {
+            if (self::namespaceMatch($include, $class)) {
+                return true;
+            }
+        }
+
+        return empty($includes);
+    }
+
+    /**
+     * @param string $rule
+     * @param string $class
+     * @return bool
+     */
+    private static function namespaceMatch(string $rule, string $class): bool
+    {
+        $strBefore = function (string $subject, string $search): string {
+            if ($search === '') {
+                return $subject;
+            }
+
+            $result = strstr($subject, (string)$search, true);
+
+            return $result === false ? $subject : $result;
+        };
+
+        return str_starts_with($strBefore($rule, '*'), $class);
     }
 }
