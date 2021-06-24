@@ -11,8 +11,8 @@ class AopConfig
 
     private function __construct(
         private array $aspects = [],
-        private array $includes = [],
-        private array $excludes = [],
+        private array $proxyDirs = [],
+        private array $exceptDirs = [],
         private bool $cacheable = false,
         private string $storageDir = '',
     )
@@ -44,17 +44,17 @@ class AopConfig
     /**
      * @return array
      */
-    public function getIncludes(): array
+    public function getProxyDirs(): array
     {
-        return $this->includes;
+        return $this->proxyDirs;
     }
 
     /**
      * @return array
      */
-    public function getExcludes(): array
+    public function getExceptDirs(): array
     {
-        return $this->excludes;
+        return $this->exceptDirs;
     }
 
     /**

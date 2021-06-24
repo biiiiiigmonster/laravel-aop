@@ -56,9 +56,15 @@ class AopClassLoader
      */
     private function lazyLoad($file): string
     {
+        $fileInfo = new SplFileInfo($file);
+        // 非指定代理文件，直接返回
+        if (self::isExcept($fileInfo->getRealPath()) || !self::isProxy($fileInfo->getRealPath())) {
+            return $file;
+        }
+
         // 实例化代理(在初始化时生成代理代码的过程中，源代码相关信息会被存储在访客节点类中)
-        $proxy = new Proxy(new SplFileInfo($file), [$classVisitor = new ClassVisitor(), new MethodVisitor()]);
-        // 无须代理文件，直接返回
+        $proxy = new Proxy($fileInfo, [$classVisitor = new ClassVisitor(), new MethodVisitor()]);
+        // 无须代理的文件类型，直接返回
         if ($classVisitor->isInterface()) {
             return $file;
         }
@@ -84,25 +90,19 @@ class AopClassLoader
      */
     private function findFile(string $class): string
     {
-        if (isset($this->classMap[$class])) {
-            return $this->classMap[$class];
-        } else {
-            // find file from composer loader.
-            $file = $this->composerLoader->findFile($class);
-
-            return self::isExclude($class) || !self::isInclude($class) ? $file : $this->lazyLoad($file);
-        }
+        return $this->classMap[$class] ?? $this->lazyLoad($this->composerLoader->findFile($class));
     }
 
     /**
-     * @param string $class
+     * @param string $fileRealPath
      * @return bool
      */
-    private static function isExclude(string $class): bool
+    private static function isExcept(string $fileRealPath): bool
     {
-        $excludes = AopConfig::instance()->getExcludes();
-        foreach ($excludes as $exclude) {
-            if (self::namespaceMatch($exclude, $class)) {
+        $exceptDirs = AopConfig::instance()->getExceptDirs();
+        array_unshift($exceptDirs, [dirname(__DIR__)]);
+        foreach ($exceptDirs as $exceptDir) {
+            if (str_starts_with($fileRealPath, $exceptDir)) {
                 return true;
             }
         }
@@ -111,38 +111,18 @@ class AopClassLoader
     }
 
     /**
-     * @param string $class
+     * @param string $fileRealPath
      * @return bool
      */
-    private static function isInclude(string $class): bool
+    private static function isProxy(string $fileRealPath): bool
     {
-        $includes = AopConfig::instance()->getIncludes();
-        foreach ($includes as $include) {
-            if (self::namespaceMatch($include, $class)) {
+        $proxyDirs = AopConfig::instance()->getProxyDirs();
+        foreach ($proxyDirs as $proxyDir) {
+            if (str_starts_with($fileRealPath, $proxyDir)) {
                 return true;
             }
         }
 
-        return empty($includes);
-    }
-
-    /**
-     * @param string $rule
-     * @param string $class
-     * @return bool
-     */
-    private static function namespaceMatch(string $rule, string $class): bool
-    {
-        $strBefore = function (string $subject, string $search): string {
-            if ($search === '') {
-                return $subject;
-            }
-
-            $result = strstr($subject, (string)$search, true);
-
-            return $result === false ? $subject : $result;
-        };
-
-        return str_starts_with($strBefore($rule, '*'), $class);
+        return false;
     }
 }
