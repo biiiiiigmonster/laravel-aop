@@ -31,8 +31,8 @@ composer require biiiiiigmonster/php8-aop
 feature
 1.支持织入(切点)和引入(注解)；
 2.切面支持仅限于class中非静态public&protected方法；
-3.实现代理懒加载；
-4.支持参数覆盖；
+3.配置化代理，启动时无须扫描文件；
+4.JoinPoint->process()支持参数覆盖；
 顺序
  Around Advice 在方法执行前后切入(前置)，可以中断或忽略原有流程的执行。
  Before Advice 在方法前切入。
@@ -48,5 +48,6 @@ todo
 4.release 1.0.0
 tofix
 1.引用参数还存在bug
+2.代理文件中存在路径问题时替换bug
 # License
 [MIT](./LICENSE)

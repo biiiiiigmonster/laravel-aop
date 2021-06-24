@@ -100,7 +100,7 @@ class AopClassLoader
     private static function isExcept(string $fileRealPath): bool
     {
         $exceptDirs = AopConfig::instance()->getExceptDirs();
-        array_unshift($exceptDirs, [dirname(__DIR__)]);
+        array_unshift($exceptDirs, dirname(__DIR__));
         foreach ($exceptDirs as $exceptDir) {
             if (str_starts_with($fileRealPath, $exceptDir)) {
                 return true;
