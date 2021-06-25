@@ -12,6 +12,7 @@ class AopConfig
     private function __construct(
         private array $aspects = [],
         private array $proxyDirs = [],
+        private bool $proxyAll = false,
         private array $exceptDirs = [],
         private bool $cacheable = false,
         private string $storageDir = '',
@@ -47,6 +48,14 @@ class AopConfig
     public function getProxyDirs(): array
     {
         return $this->proxyDirs;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isProxyAll(): bool
+    {
+        return $this->proxyAll;
     }
 
     /**

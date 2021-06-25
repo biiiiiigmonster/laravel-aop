@@ -116,6 +116,10 @@ class AopClassLoader
      */
     private static function isProxy(string $fileRealPath): bool
     {
+        if (AopConfig::instance()->isProxyAll()) {
+            return true;
+        }
+
         $proxyDirs = AopConfig::instance()->getProxyDirs();
         foreach ($proxyDirs as $proxyDir) {
             if (str_starts_with($fileRealPath, $proxyDir)) {
