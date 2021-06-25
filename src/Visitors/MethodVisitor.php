@@ -61,28 +61,26 @@ class MethodVisitor extends NodeVisitorAbstract
      */
     private function rewriteMethod(ClassMethod $node): ClassMethod
     {
-        $variadicArgs = null;
+        $args = [];
         foreach ($node->getParams() as $param) {
+            $arg = new Variable($param->var->name);
             if ($param->variadic) {
-                $variadicArgs = new Variable($param->var->name);
+                $arg = new Node\Param($arg, variadic: true);
             }
+            $args[] = $arg;
         }
-
-        $stmts = $this->methodAssign($node);
-
-        $staticCall = new StaticCall(new Name('self'), '__proxyCall', [
+        array_unshift($args,...[
             // __CLASS__
             new Arg(new MagicConstClass()),
             // __FUNCTION__
             new Arg(new MagicConstFunction()),
-            // func_get_args()
-            new Arg(new FuncCall(new Name('func_get_args'))),
-            // variadic args
-            new Arg($variadicArgs ?? new Array_([], ['kind' => Array_::KIND_SHORT])),
             // A closure that wrapped original method code.
             new Arg(new Variable('__target__')),
         ]);
 
+        $staticCall = new StaticCall(new Name('self'), '__proxyCall', $args);
+
+        $stmts = $this->methodAssign($node);
         $returnType = $node->getReturnType();
         $stmts[] = $returnType instanceof Identifier && $returnType->name === 'void'
             ? new Expression($staticCall)

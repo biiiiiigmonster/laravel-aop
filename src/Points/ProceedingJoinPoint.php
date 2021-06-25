@@ -15,26 +15,26 @@ class ProceedingJoinPoint extends JoinPoint
 {
     private array $argsMap;
     private ?array $param = null;
+    private array $args;
 
     /**
      * JoinPoint constructor.
      *
      * @param string $className
      * @param string $method
-     * @param array $arguments
-     * @param array $variadicArguments
      * @param Closure $target
+     * @param mixed ...$args
      * @throws \ReflectionException
      */
     public function __construct(
         private string $className,
         private string $method,
-        private array $arguments,// func_get_args() can't get named arguments in variadic parameter.
-        private array $variadicArguments,// maybe contain named arguments, if give.
         Closure $target,
+        &...$args,
     )
     {
         $this->target = $target;
+        $this->args = $args;
         // Parse ReflectionMethod Data.
         $methodRfc = new ReflectionMethod($className, $method);
         $this->argsMap = $this->parseArgsMap($methodRfc);
@@ -60,9 +60,17 @@ class ProceedingJoinPoint extends JoinPoint
     /**
      * @return array
      */
-    public function getArguments(): array
+    public function getArgs(): array
     {
-        return $this->arguments;
+        return $this->args;
+    }
+
+    /**
+     * @return array
+     */
+    public function getArgsMap(): array
+    {
+        return $this->argsMap;
     }
 
     /**
@@ -74,11 +82,27 @@ class ProceedingJoinPoint extends JoinPoint
     }
 
     /**
-     * @param array|null $param
+     * Parse the arguments map by the "ReflectionMethod".
+     * @param ReflectionMethod $reflectionMethod
+     * @return array
+     * @throws \ReflectionException
      */
-    protected function setParam(?array $param): void
+    protected function parseArgsMap(ReflectionMethod $reflectionMethod): array
     {
-        $this->param = $param;
+        $args = $this->getArgs();
+        $argsMap = [];
+        foreach ($reflectionMethod->getParameters() as $parameter) {
+            // variadic param is end.
+            if ($parameter->isVariadic()) {
+                $argsMap[$parameter->getName()] = $args;
+                break;
+            }
+            $tem = $args;
+            $value = array_shift($args);
+            $argsMap[$parameter->getName()] = $tem === $args ? $parameter->getDefaultValue() : $value;
+        }
+
+        return $argsMap;
     }
 
     /**
@@ -107,73 +131,11 @@ class ProceedingJoinPoint extends JoinPoint
     }
 
     /**
-     * Parse the arguments map by the "ReflectionMethod".
-     * @param ReflectionMethod $reflectionMethod
-     * @return array
-     * @throws \ReflectionException
-     */
-    protected function parseArgsMap(ReflectionMethod $reflectionMethod): array
-    {
-        $func_get_args = $this->getArguments();
-        $variadic_args = $this->getVariadicArguments();
-        $argsMap = [];
-        foreach ($reflectionMethod->getParameters() as $parameter) {
-            if (!$parameter->isVariadic()) {
-                $tem = $func_get_args;
-                $value = array_shift($func_get_args);
-                $argsMap[$parameter->getName()] = $tem === $func_get_args ? $parameter->getDefaultValue() : $value;
-            } else {
-                $remainder = $func_get_args;
-                foreach ($variadic_args as $named => $value) {
-                    if (is_string($named)) {
-                        $remainder[$named] = $value;
-                    }
-                }
-                $argsMap[$parameter->getName()] = $remainder;
-            }
-        }
-
-        return $argsMap;
-    }
-
-    /**
-     * @return array
-     */
-    public function getArgsMap(): array
-    {
-        return $this->argsMap;
-    }
-
-    /**
-     * @return array
-     */
-    public function getVariadicArguments(): array
-    {
-        return $this->variadicArguments;
-    }
-
-    /**
      * @return object|null
      */
     public function getAttributeInstance(): ?object
     {
         return Aop::getAttributeMapping($this->className, $this->method, $this->aspect::class);
-    }
-
-    /**
-     * Get the original parameter contains func_get_args() & variadic named arguments.
-     * @return array
-     */
-    protected function getOriginalArguments(): array
-    {
-        $args = $this->getArguments();
-        foreach ($this->getVariadicArguments() as $named => $argument) {
-            if (is_string($named)) {
-                $args[$named] = $argument;
-            }
-        }
-
-        return $args;
     }
 
     /**
@@ -184,7 +146,7 @@ class ProceedingJoinPoint extends JoinPoint
     {
         // call target.
         $target = $this->target;
-        $args = $this->getParam() ?? $this->getOriginalArguments();
+        $args = $this->getParam() ?? $this->getArgs();
 
         return $target(...$args);
     }
@@ -199,11 +161,9 @@ class ProceedingJoinPoint extends JoinPoint
      */
     public function process(?array $param = null): mixed
     {
-        $this->setParam($param);
+        $this->param = $param;
         $aspectInstance = $this->getAspect();
-        if ($aspectInstance) {
-            [$before, , $after, $afterThrowing, $afterReturning] = AspectHandler::getAspectAdvices($aspectInstance::class);
-        }
+        [$before, , $after, $afterThrowing, $afterReturning] = AspectHandler::getAspectAdvices($aspectInstance::class);
 
         // Execute "Before"
         if (isset($before)) {
@@ -217,7 +177,7 @@ class ProceedingJoinPoint extends JoinPoint
             // Set "Throwable"
             $this->setThrowable($throwable);
         }
-        // The next pipeline will change the cur aspect, so reset it after the pipeline execute complete.
+        // The next pipeline will change the cur aspect, so reset it after the next pipeline execute complete.
         $this->setAspect($aspectInstance);
 
         //  Execute "AfterThrowing" if pipeline has throwable

@@ -15,17 +15,16 @@ trait FunctionTrait
      *
      * @param string $className
      * @param string $method
-     * @param array $arguments
-     * @param array $variadicArguments
      * @param Closure $target
+     * @param mixed ...$args
      * @return mixed
-     * @throws \ReflectionException
      * @throws \BiiiiiigMonster\Aop\Exceptions\AopException
+     * @throws \ReflectionException
      */
-    public static function __proxyCall(string $className, string $method, array $arguments, array $variadicArguments, Closure $target): mixed
+    public static function __proxyCall(string $className, string $method, Closure $target, &...$args): mixed
     {
         $pipeline = self::__pipeline(Aop::getAspectMapping($className, $method));
-        $joinPoint = new ProceedingJoinPoint($className, $method, $arguments, $variadicArguments, $target);
+        $joinPoint = new ProceedingJoinPoint($className, $method, $target, ...$args);
 
         return $pipeline($joinPoint);
     }
