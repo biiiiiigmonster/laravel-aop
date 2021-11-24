@@ -83,7 +83,7 @@ class Proxy
     public function generateProxyFile(): string
     {
         $proxyFile = $this->proxyFilepath();
-        if (!file_exists($proxyFile) || !AopConfig::instance()->isCacheable()) {
+        if (!file_exists($proxyFile)) {
             $temPath = $proxyFile . '.' . uniqid();
             file_put_contents($temPath, $this->proxyCode);
             rename($temPath, $proxyFile);

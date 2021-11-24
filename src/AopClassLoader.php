@@ -58,7 +58,7 @@ class AopClassLoader
     {
         $fileInfo = new SplFileInfo($file);
         // 非指定代理文件，直接返回
-        if (self::isExcept($fileInfo->getRealPath()) || !self::isProxy($fileInfo->getRealPath())) {
+        if (!self::isProxy($fileInfo->getRealPath())) {
             return $file;
         }
 
@@ -74,40 +74,26 @@ class AopClassLoader
     }
 
     /**
-     * @param string $class
+     * @param string $namespaceClass
      */
-    public function loadClass(string $class): void
+    public function loadClass(string $namespaceClass): void
     {
-        if ($file = $this->findFile($class)) {
+        if ($file = $this->findFile($namespaceClass)) {
 
             include $file;
         }
     }
 
     /**
-     * @param string $class
+     * @param string $namespaceClass
      * @return string
      */
-    private function findFile(string $class): string
+    private function findFile(string $namespaceClass): string
     {
-        return $this->classMap[$class] ?? $this->lazyLoad($this->composerLoader->findFile($class));
-    }
-
-    /**
-     * @param string $fileRealPath
-     * @return bool
-     */
-    private static function isExcept(string $fileRealPath): bool
-    {
-        $exceptDirs = AopConfig::instance()->getExceptDirs();
-        array_unshift($exceptDirs, dirname(__DIR__));
-        foreach ($exceptDirs as $exceptDir) {
-            if (str_starts_with($fileRealPath, $exceptDir)) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->classMap[$namespaceClass] ??
+            $this->lazyLoad(
+                $this->composerLoader->findFile($namespaceClass)
+            );
     }
 
     /**
@@ -116,10 +102,6 @@ class AopClassLoader
      */
     private static function isProxy(string $fileRealPath): bool
     {
-        if (AopConfig::instance()->isProxyAll()) {
-            return true;
-        }
-
         $proxyDirs = AopConfig::instance()->getProxyDirs();
         foreach ($proxyDirs as $proxyDir) {
             if (str_starts_with($fileRealPath, $proxyDir)) {

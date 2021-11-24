@@ -67,7 +67,7 @@ class MethodVisitor extends NodeVisitorAbstract
             }
             $args[] = $arg;
         }
-        array_unshift($args,...[
+        array_unshift($args, ...[
             // __CLASS__
             new Arg(new MagicConstClass()),
             // __FUNCTION__
@@ -115,8 +115,12 @@ class MethodVisitor extends NodeVisitorAbstract
         ])));
 
         $return = [$target];
-        if (isset($magicConstMethod)) array_unshift($return, $magicConstMethod);
-        if (isset($magicConstFunction)) array_unshift($return, $magicConstFunction);
+        if (isset($magicConstMethod)) {
+            array_unshift($return, $magicConstMethod);
+        }
+        if (isset($magicConstFunction)) {
+            array_unshift($return, $magicConstFunction);
+        }
 
         return $return;
     }

@@ -2,8 +2,13 @@
 
 namespace BiiiiiigMonster\Aop;
 
+use Illuminate\Foundation\PackageManifest;
+
 class AopConfig
 {
+    private array $proxyDirs = [];
+    private string $storageDir;
+
     /**
      * @var AopConfig
      */
@@ -11,13 +16,23 @@ class AopConfig
 
     private function __construct(
         private array $aspects = [],
-        private array $proxyDirs = [],
-        private bool $proxyAll = false,
-        private array $exceptDirs = [],
-        private bool $cacheable = false,
-        private string $storageDir = '',
     )
     {
+        $this->storageDir = sys_get_temp_dir();
+        // 默认只代理laravel下app目录文件
+        $this->pushProxyDirs(app_path());
+        $this->loadConfiguredAops();
+    }
+
+    /**
+     * Load all of the configured aops.
+     */
+    public function loadConfiguredAops(): void
+    {
+        $aops = app(PackageManifest::class)->config("aop");
+        foreach ($aops as $aop) {
+            $this->aspects += $aop['aspects'] ?? [];
+        }
     }
 
     /**
@@ -25,10 +40,10 @@ class AopConfig
      * @param array $config
      * @return static
      */
-    public static function instance(array $config=[]): self
+    public static function instance(array $config = []): static
     {
-        if(!isset(self::$instance)){
-            self::$instance = new self(...array_values($config));
+        if (!isset(self::$instance)) {
+            self::$instance = new static(...array_values($config));
         }
 
         return self::$instance;
@@ -51,27 +66,11 @@ class AopConfig
     }
 
     /**
-     * @return bool
+     * @param string $path
      */
-    public function isProxyAll(): bool
+    public function pushProxyDirs(string $path): void
     {
-        return $this->proxyAll;
-    }
-
-    /**
-     * @return array
-     */
-    public function getExceptDirs(): array
-    {
-        return $this->exceptDirs;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isCacheable(): bool
-    {
-        return $this->cacheable;
+        $this->proxyDirs[] = $path;
     }
 
     /**
