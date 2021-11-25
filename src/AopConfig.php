@@ -20,7 +20,7 @@ class AopConfig
     {
         $this->storageDir = storage_path('framework/aop');
         // 默认只代理laravel下app目录文件
-        $this->pushProxyDirs(app_path());
+        $this->proxyDirs[] = app_path();
         $this->loadConfiguredAops();
     }
 
@@ -30,9 +30,7 @@ class AopConfig
     public function loadConfiguredAops(): void
     {
         $aops = app(PackageManifest::class)->config("aop");
-        foreach ($aops as $aop) {
-            $this->aspects += $aop['aspects'] ?? [];
-        }
+        $this->aspects = array_merge($this->aspects, $aops['aspects'] ?? []);
     }
 
     /**
@@ -63,14 +61,6 @@ class AopConfig
     public function getProxyDirs(): array
     {
         return $this->proxyDirs;
-    }
-
-    /**
-     * @param string $path
-     */
-    public function pushProxyDirs(string $path): void
-    {
-        $this->proxyDirs[] = $path;
     }
 
     /**

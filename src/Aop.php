@@ -50,21 +50,24 @@ class Aop
 
         foreach (self::getAspects() as $aspect) {
             $aspectClass = new ReflectionClass($aspect);
-            $aspectClassAspectAttributes = $aspectClass->getAttributes(Aspect::class);
-            if (empty($aspectClassAspectAttributes)) {
+            if (empty($aspectClassAspectAttributes = $aspectClass->getAttributes(Aspect::class))) {
                 throw new AopException("$aspect is not a Aspect!");
             }
-            /** @var Aspect $aspectAttributeInstance */
-            $aspectAttributeInstance = $aspectClassAspectAttributes[0]->newInstance();
-            /**----------引入(注解)-----------*/
-            if ($rfcAttributeInstances = self::getAttributeNewInstances($className, $method, $aspectAttributeInstance->pointcut)) {
-                foreach ($rfcAttributeInstances as $rfcAttributeInstance) {
-                    $queue->insert([$aspectClass->newInstance(), $rfcAttributeInstance], $aspectAttributeInstance->order);
+            foreach ($aspectClassAspectAttributes as $aspectClassAspectAttribute) {
+                /** @var Aspect $aspectClassAspectAttributeInstance */
+                $aspectClassAspectAttributeInstance = $aspectClassAspectAttribute->newInstance();
+                foreach ($aspectClassAspectAttributeInstance->pointcuts as $pointcut) {
+                    /**----------引入(注解)-----------*/
+                    if ($rfcAttributeInstances = self::getAttributeNewInstances($className, $method, $pointcut)) {
+                        foreach ($rfcAttributeInstances as $rfcAttributeInstance) {
+                            $queue->insert([$aspectClass->newInstance(), $rfcAttributeInstance], $aspectClassAspectAttributeInstance->priority);
+                        }
+                    }
+                    /**--------织入(切点)----------*/
+                    if (self::isMatch($pointcut, $className, $method)) {
+                        $queue->insert([$aspectClass->newInstance(), null], $aspectClassAspectAttributeInstance->priority);
+                    }
                 }
-            }
-            /**--------织入(切点)----------*/
-            if (self::isMatch($aspectAttributeInstance->pointcut, $className, $method)) {
-                $queue->insert([$aspectClass->newInstance(), null], $aspectAttributeInstance->order);
             }
         }
 
