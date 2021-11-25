@@ -18,7 +18,7 @@ class AopConfig
         private array $aspects = [],
     )
     {
-        $this->storageDir = sys_get_temp_dir();
+        $this->storageDir = storage_path('framework/aop');
         // 默认只代理laravel下app目录文件
         $this->pushProxyDirs(app_path());
         $this->loadConfiguredAops();

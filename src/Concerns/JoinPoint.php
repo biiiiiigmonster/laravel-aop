@@ -62,9 +62,9 @@ abstract class JoinPoint
 
     /**
      * Get the joinPoint attribute instance.
-     * @return object|null
+     * @return array
      */
-    abstract public function getAttributeInstance(): ?object;
+    abstract public function getAttributeInstances(): array;
 
     /**
      * @return object|null

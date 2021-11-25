@@ -9,7 +9,7 @@ final class Aspect
 {
     /**
      * Aop constructor.
-     * @param array $pointcuts
+     * @param string $pointcut
      * @param int $order
      */
     public function __construct(
@@ -21,7 +21,7 @@ final class Aspect
          *      'App\\Http\\CommentController::get*',
          * ]
          */
-        public array $pointcuts = [],
+        public string $pointcut,
         public int $order = 0,
     )
     {

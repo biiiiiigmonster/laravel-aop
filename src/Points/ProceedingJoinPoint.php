@@ -34,7 +34,7 @@ class ProceedingJoinPoint extends JoinPoint
     )
     {
         $this->target = $target;
-        $this->args = $args;
+        $this->args = &$args;
         // Parse ReflectionMethod Data.
         $methodRfc = new ReflectionMethod($className, $method);
         $this->argsMap = $this->parseArgsMap($methodRfc);
@@ -131,9 +131,9 @@ class ProceedingJoinPoint extends JoinPoint
     }
 
     /**
-     * @return object|null
+     * @return array
      */
-    public function getAttributeInstance(): ?object
+    public function getAttributeInstances(): array
     {
         return Aop::getAttributeMapping($this->className, $this->method, $this->aspect::class);
     }

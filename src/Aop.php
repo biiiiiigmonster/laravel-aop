@@ -15,6 +15,8 @@ class Aop
 
     private static array $attributeMapping = [];
 
+    private static array $classMethodAttributeInstances = [];
+
     /**
      * Register aspect class.
      * @param string|array $aspectClass
@@ -43,48 +45,70 @@ class Aop
      */
     public static function parse(string $className, string $method): void
     {
-        $rfcClass = new ReflectionClass($className);
-        $rfcClassAttributes = $rfcClass->getAttributes();
-        $rfcMethodAttributes = $rfcClass->getMethod($method)->getAttributes();
+        self::attributeNewInstance($className,$method);
         $queue = new SplPriorityQueue();
 
         foreach (self::getAspects() as $aspect) {
             $aspectClass = new ReflectionClass($aspect);
-            if(empty($aspectClass->getAttributes(Aspect::class))){
+            $aspectClassAspectAttributes = $aspectClass->getAttributes(Aspect::class);
+            if (empty($aspectClassAspectAttributes)) {
                 throw new AopException("$aspect is not a Aspect!");
             }
-            /** @var Aspect $aspectAttribute */
-            $aspectAttribute = $aspectClass->getAttributes(Aspect::class)[0]->newInstance();
-            foreach ($aspectAttribute->pointcuts as $pointcut) {
-                /**----------引入(注解)-----------*/
-                foreach ($rfcMethodAttributes as $attribute) {
-                    if ($pointcut === $attribute->getName()) {
-                        // 如果切入点存在当前方法的注解数组中
-                        $queue->insert([$aspectClass->newInstance(), $attribute->newInstance()], $aspectAttribute->order);
-                        continue 3;
-                    }
+            /** @var Aspect $aspectAttributeInstance */
+            $aspectAttributeInstance = $aspectClassAspectAttributes[0]->newInstance();
+            /**----------引入(注解)-----------*/
+            if ($rfcAttributeInstances = self::getAttributeNewInstances($className, $method, $aspectAttributeInstance->pointcut)) {
+                foreach ($rfcAttributeInstances as $rfcAttributeInstance) {
+                    $queue->insert([$aspectClass->newInstance(), $rfcAttributeInstance], $aspectAttributeInstance->order);
                 }
-                foreach ($rfcClassAttributes as $attribute) {
-                    if ($pointcut === $attribute->getName()) {
-                        // 如果切入点存在当前方法所在类的注解数组中
-                        $queue->insert([$aspectClass->newInstance(), $attribute->newInstance()], $aspectAttribute->order);
-                        continue 3;
-                    }
-                }
-                /**--------织入(切点)----------*/
-                if (self::isMatch($pointcut, $className, $method)) {
-                    // 如果切入点匹配于当前方法
-                    $queue->insert([$aspectClass->newInstance(), null], $aspectAttribute->order);
-                    continue 2;
-                }
+            }
+            /**--------织入(切点)----------*/
+            if (self::isMatch($aspectAttributeInstance->pointcut, $className, $method)) {
+                $queue->insert([$aspectClass->newInstance(), null], $aspectAttributeInstance->order);
             }
         }
 
         while (!$queue->isEmpty()) {
-            [$aspectInstances, $attributeInstances] = $queue->extract();
-            self::$aspectMapping[$className][$method][] = $aspectInstances;
-            self::$attributeMapping[$className][$method][$aspectInstances::class] = $attributeInstances;
+            [$aspectInstance, $attributeInstance] = $queue->extract();
+            self::$aspectMapping[$className][$method][] = $aspectInstance;
+            if ($attributeInstance) {
+                self::$attributeMapping[$className][$method][$aspectInstance::class][] = $attributeInstance;
+            }
         }
+    }
+
+    /**
+     * @param string $className
+     * @param string $method
+     * @throws \ReflectionException
+     */
+    public static function attributeNewInstance(string $className, string $method): void
+    {
+        if (isset(self::$classMethodAttributeInstances[$className][$method])) {
+            return;
+        }
+
+        $rfcClass = new ReflectionClass($className);
+        $rfcClassAttributes = $rfcClass->getAttributes();
+        $rfcMethodAttributes = $rfcClass->getMethod($method)->getAttributes();
+        foreach ($rfcClassAttributes + $rfcMethodAttributes as $rfcAttribute) {
+            self::$classMethodAttributeInstances[$className][$method][] = $rfcAttribute->newInstance();
+        }
+    }
+
+    /**
+     * @param string $className
+     * @param string $method
+     * @param string|null $attributeClassName
+     * @return array
+     */
+    public static function getAttributeNewInstances(string $className, string $method, ?string $attributeClassName): array
+    {
+        $instances = self::$classMethodAttributeInstances[$className][$method] ?? [];
+
+        return $attributeClassName
+            ? array_filter($instances, fn($instance) => $instance::class === $attributeClassName)
+            : $instances;
     }
 
     /**
@@ -97,7 +121,7 @@ class Aop
      */
     public static function getAspectMapping(string $className, string $method): array
     {
-        if(!isset(self::$aspectMapping[$className][$method])){
+        if (!isset(self::$aspectMapping[$className][$method])) {
             self::parse($className, $method);
         }
 
@@ -109,11 +133,11 @@ class Aop
      * @param string $className
      * @param string $method
      * @param string $aspectClass
-     * @return object|null
+     * @return array
      */
-    public static function getAttributeMapping(string $className, string $method, string $aspectClass): ?object
+    public static function getAttributeMapping(string $className, string $method, string $aspectClass): array
     {
-        return self::$attributeMapping[$className][$method][$aspectClass] ?? null;
+        return self::$attributeMapping[$className][$method][$aspectClass] ?? [];
     }
 
     /**
