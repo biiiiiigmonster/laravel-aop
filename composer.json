@@ -1,5 +1,5 @@
 {
-    "name": "biiiiiigmonster/php8-aop",
+    "name": "biiiiiigmonster/laravel-aop",
     "description": "PHP8 Attribute Component",
     "type": "library",
     "license": "MIT",

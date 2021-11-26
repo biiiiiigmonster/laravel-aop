@@ -5,9 +5,9 @@ English | [中文](./README-CN.md)
 # PHP8 Attribute
 
 <p>
-    <a href="https://github.com/biiiiiigmonster/php8-aop/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-7389D8.svg?style=flat" ></a>
-    <a href="https://github.com/biiiiiigmonster/php8-aop/releases" ><img src="https://img.shields.io/github/release/biiiiiigmonster/php8-aop.svg?color=4099DE" /></a> 
-    <a href="https://packagist.org/packages/biiiiiigmonster/php8-aop"><img src="https://img.shields.io/packagist/dt/biiiiiigmonster/php8-aop.svg?color=" /></a> 
+    <a href="https://github.com/biiiiiigmonster/laravel-aop/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-7389D8.svg?style=flat" ></a>
+    <a href="https://github.com/biiiiiigmonster/laravel-aop/releases" ><img src="https://img.shields.io/github/release/biiiiiigmonster/laravel-aop.svg?color=4099DE" /></a> 
+    <a href="https://packagist.org/packages/biiiiiigmonster/laravel-aop"><img src="https://img.shields.io/packagist/dt/biiiiiigmonster/laravel-aop.svg?color=" /></a> 
     <a><img src="https://img.shields.io/badge/php-8.0+-59a9f8.svg?style=flat" /></a> 
 </p>
 
@@ -24,7 +24,7 @@ English | [中文](./README-CN.md)
 # Installation
 
 ```bash
-composer require biiiiiigmonster/php8-aop
+composer require biiiiiigmonster/laravel-aop
 ```
 
 # Introduce
