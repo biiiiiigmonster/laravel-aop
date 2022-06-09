@@ -15,9 +15,8 @@
         }
     },
     "require": {
-        "php": "^8.0",
         "nikic/php-parser": "^4.10",
-        "laravel/framework": "^8.0"
+        "illuminate/pipeline": "^9.0"
     },
     "extra": {
         "laravel": {

@@ -7,8 +7,8 @@ use Attribute;
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 final class Aspect
 {
-    public array $pointcuts;
-    public int $priority;
+    private array $pointcuts;
+    private int $priority;
 
     /**
      * Aop constructor.
@@ -20,9 +20,25 @@ final class Aspect
      * ]
      * @param int $priority
      */
-    public function __construct(string|array $pointcuts, int $priority = 0,)
+    public function __construct(string|array $pointcuts, int $priority = 0)
     {
         $this->pointcuts = (array) $pointcuts;
         $this->priority = $priority;
+    }
+
+    /**
+     * @return array
+     */
+    public function getPointcuts(): array
+    {
+        return $this->pointcuts;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPriority(): int
+    {
+        return $this->priority;
     }
 }

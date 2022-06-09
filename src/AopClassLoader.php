@@ -5,6 +5,7 @@ namespace BiiiiiigMonster\Aop;
 use BiiiiiigMonster\Aop\Visitors\ClassVisitor;
 use BiiiiiigMonster\Aop\Visitors\MethodVisitor;
 use Composer\Autoload\ClassLoader as ComposerClassLoader;
+use Illuminate\Contracts\Foundation\Application;
 use SplFileInfo;
 
 class AopClassLoader
@@ -17,28 +18,28 @@ class AopClassLoader
     /**
      * AopClassLoader constructor.
      * @param ComposerClassLoader $composerLoader
-     * @param array $config
+     * @param Application $app
      */
     public function __construct(
         private ComposerClassLoader $composerLoader,
-        array $config
+        private Application $app
     )
     {
-        Aop::register(AopConfig::instance($config)->getAspects());
+        Aop::register(AopConfig::instance($this->app)->getAspects());
     }
 
     /**
      * Aop ClassLoader init.
-     * @param array $config
+     * @param Application $app
      */
-    public static function init(array $config): void
+    public static function init(Application $app): void
     {
         $loaders = spl_autoload_functions();
 
         foreach ($loaders as &$loader) {
             $unregisterLoader = $loader;
             if (is_array($loader) && $loader[0] instanceof ComposerClassLoader) {
-                $loader[0] = new static($loader[0], $config);
+                $loader[0] = new static($loader[0], $app);
             }
             spl_autoload_unregister($unregisterLoader);
         }

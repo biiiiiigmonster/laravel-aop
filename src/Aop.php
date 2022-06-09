@@ -51,21 +51,21 @@ class Aop
         foreach (self::getAspects() as $aspect) {
             $aspectClass = new ReflectionClass($aspect);
             if (empty($aspectClassAspectAttributes = $aspectClass->getAttributes(Aspect::class))) {
-                throw new AopException("$aspect is not a Aspect!");
+                throw new AopException("$aspect is not a aspect!");
             }
             foreach ($aspectClassAspectAttributes as $aspectClassAspectAttribute) {
                 /** @var Aspect $aspectClassAspectAttributeInstance */
                 $aspectClassAspectAttributeInstance = $aspectClassAspectAttribute->newInstance();
-                foreach ($aspectClassAspectAttributeInstance->pointcuts as $pointcut) {
-                    /**----------引入(注解)-----------*/
+                foreach ($aspectClassAspectAttributeInstance->getPointcuts() as $pointcut) {
+                    /**----------Introduce(Attribute)-----------*/
                     if ($rfcAttributeInstances = self::getAttributeNewInstances($className, $method, $pointcut)) {
                         foreach ($rfcAttributeInstances as $rfcAttributeInstance) {
-                            $queue->insert([$aspectClass->newInstance(), $rfcAttributeInstance], $aspectClassAspectAttributeInstance->priority);
+                            $queue->insert([$aspectClass->newInstance(), $rfcAttributeInstance], $aspectClassAspectAttributeInstance->getPriority());
                         }
                     }
-                    /**--------织入(切点)----------*/
+                    /**--------Weave(Pointcut)----------*/
                     if (self::isMatch($pointcut, $className, $method)) {
-                        $queue->insert([$aspectClass->newInstance(), null], $aspectClassAspectAttributeInstance->priority);
+                        $queue->insert([$aspectClass->newInstance(), null], $aspectClassAspectAttributeInstance->getPriority());
                     }
                 }
             }
@@ -87,10 +87,6 @@ class Aop
      */
     public static function attributeNewInstance(string $className, string $method): void
     {
-        if (isset(self::$classMethodAttributeInstances[$className][$method])) {
-            return;
-        }
-
         $rfcClass = new ReflectionClass($className);
         $rfcClassAttributes = $rfcClass->getAttributes();
         $rfcMethodAttributes = $rfcClass->getMethod($method)->getAttributes();

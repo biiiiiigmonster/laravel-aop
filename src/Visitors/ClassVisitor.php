@@ -3,7 +3,7 @@
 namespace BiiiiiigMonster\Aop\Visitors;
 
 use BiiiiiigMonster\Aop\Attributes\Aspect;
-use BiiiiiigMonster\Aop\Concerns\FunctionTrait;
+use BiiiiiigMonster\Aop\Concerns\MethodTrait;
 use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\TraitUse;
@@ -115,7 +115,7 @@ class ClassVisitor extends NodeVisitorAbstract
             || ($node instanceof Class_ && !$node->isAnonymous())
         ) {
             array_unshift($node->stmts, new TraitUse([
-                new Node\Name('\\' . FunctionTrait::class)
+                new Node\Name('\\' . MethodTrait::class)
             ]));
         }
 

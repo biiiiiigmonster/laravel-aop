@@ -2,10 +2,11 @@
 
 namespace BiiiiiigMonster\Aop;
 
-use Illuminate\Foundation\PackageManifest;
+use Illuminate\Contracts\Foundation\Application;
 
 class AopConfig
 {
+    private array $aspects = [];
     private array $proxyDirs = [];
     private string $storageDir;
 
@@ -14,34 +15,23 @@ class AopConfig
      */
     private static AopConfig $instance;
 
-    private function __construct(
-        private array $aspects = [],
-    )
+    private function __construct(Application $app)
     {
-        $this->storageDir = storage_path('framework/aop');
+        $this->storageDir = $app->storagePath('framework/aop');
         // 默认只代理laravel下app目录文件
-        $this->proxyDirs[] = app_path();
-        $this->loadConfiguredAops();
-    }
-
-    /**
-     * Load all of the configured aops.
-     */
-    public function loadConfiguredAops(): void
-    {
-        $aops = app(PackageManifest::class)->config("aop");
-        $this->aspects = array_merge($this->aspects, $aops['aspects'] ?? []);
+        $this->proxyDirs[] = $app->basePath('app');
+        $this->aspects = array_merge($this->aspects, $app->make('config')->get('aop.aspects', []));
     }
 
     /**
      * Get single instance.
-     * @param array $config
+     * @param Application|null $app
      * @return static
      */
-    public static function instance(array $config = []): static
+    public static function instance(?Application $app = null): static
     {
         if (!isset(self::$instance)) {
-            self::$instance = new static(...array_values($config));
+            self::$instance = new static($app);
         }
 
         return self::$instance;
