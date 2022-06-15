@@ -2,6 +2,8 @@
 
 namespace BiiiiiigMonster\Aop;
 
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Str;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor;
 use PhpParser\Parser;
@@ -15,7 +17,6 @@ class Proxy
     private Parser $parser;
     private NodeTraverser $traverser;
     private PrettyPrinter\Standard $printer;
-    /** @var NodeVisitor[] $visitors */
     private array $visitors;
     private string $proxyCode;
 
@@ -24,7 +25,7 @@ class Proxy
      * @param SplFileInfo $file
      * @param array $visitors
      */
-    public function __construct(SplFileInfo $file, array $visitors = [])
+    public function __construct(SplFileInfo $file, NodeVisitor ...$visitors)
     {
         $this->parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7);
         $this->traverser = new NodeTraverser();
@@ -64,8 +65,12 @@ class Proxy
      */
     private function proxyFilepath(): string
     {
-        $relativePath = array_reverse(explode(base_path(), $this->file->getPath(), 2))[0];
-        $dir = AopConfig::instance()->getStorageDir() . $relativePath;
+        $dir = Str::replaceFirst(
+            App::basePath(),
+            App::make('config')->get('aop.storage_path', App::storagePath('aop')),
+            $this->file->getPath()
+        );
+
         // create storage path dir when not exist.
         !is_dir($dir) && mkdir($dir, 0755, true);
         return sprintf(
@@ -83,7 +88,7 @@ class Proxy
     public function generateProxyFile(): string
     {
         $proxyFile = $this->proxyFilepath();
-        if (!app()->isProduction() || !file_exists($proxyFile)) {
+        if (!App::isProduction() || !file_exists($proxyFile)) {
             $temPath = $proxyFile . '.' . uniqid();
             file_put_contents($temPath, $this->proxyCode);
             rename($temPath, $proxyFile);

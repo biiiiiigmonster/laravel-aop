@@ -11,7 +11,7 @@ class AopServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(dirname(__DIR__) . '/config/aop.php', 'aop');
 
         // Aop autoload function register
-        AopClassLoader::init($this->app);
+        AopClassLoader::init();
     }
 
     public function boot()

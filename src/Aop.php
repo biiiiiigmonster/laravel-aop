@@ -30,7 +30,7 @@ class Aop
      * Get aspects.
      * @return array
      */
-    public static function getAspects(): array
+    private static function getAspects(): array
     {
         return self::$aspects;
     }
@@ -146,7 +146,7 @@ class Aop
      * @param string $pointcut
      * @return bool
      */
-    public static function isMatch(string $pointcut, string $className, string $method): bool
+    private static function isMatch(string $pointcut, string $className, string $method): bool
     {
         $pointcutArr = explode('::', $pointcut);
         // Classname must eq.

@@ -5,7 +5,7 @@ namespace BiiiiiigMonster\Aop;
 use BiiiiiigMonster\Aop\Visitors\ClassVisitor;
 use BiiiiiigMonster\Aop\Visitors\MethodVisitor;
 use Composer\Autoload\ClassLoader as ComposerClassLoader;
-use Illuminate\Contracts\Foundation\Application;
+use Illuminate\Support\Facades\App;
 use SplFileInfo;
 
 class AopClassLoader
@@ -18,28 +18,25 @@ class AopClassLoader
     /**
      * AopClassLoader constructor.
      * @param ComposerClassLoader $composerLoader
-     * @param Application $app
      */
     public function __construct(
-        private ComposerClassLoader $composerLoader,
-        private Application $app
+        private ComposerClassLoader $composerLoader
     )
     {
-        Aop::register(AopConfig::instance($this->app)->getAspects());
+        Aop::register(App::make('config')->get('aop.aspects', []));
     }
 
     /**
      * Aop ClassLoader init.
-     * @param Application $app
      */
-    public static function init(Application $app): void
+    public static function init(): void
     {
         $loaders = spl_autoload_functions();
 
         foreach ($loaders as &$loader) {
             $unregisterLoader = $loader;
             if (is_array($loader) && $loader[0] instanceof ComposerClassLoader) {
-                $loader[0] = new static($loader[0], $app);
+                $loader[0] = new static($loader[0]);
             }
             spl_autoload_unregister($unregisterLoader);
         }
@@ -103,7 +100,7 @@ class AopClassLoader
      */
     private static function isProxy(string $fileRealPath): bool
     {
-        $proxyDirs = AopConfig::instance()->getProxyDirs();
+        $proxyDirs = App::make('config')->get('aop.proxy_dirs', []);
         foreach ($proxyDirs as $proxyDir) {
             if (str_starts_with($fileRealPath, $proxyDir)) {
                 return true;
